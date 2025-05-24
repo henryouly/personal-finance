@@ -29,18 +29,9 @@ const app = new Hono()
           orderBy: (accounts, { asc }) => [asc(accounts.name)],
         });
 
-        // Calculate total balance
-        const totalBalance = allAccounts.reduce(
-          (sum, account) => sum + Number(account.balance),
-          0
-        );
-
         return c.json({
           success: true,
-          data: {
-            accounts: allAccounts,
-            total: totalBalance.toFixed(2),
-          },
+          data: allAccounts,
         });
       } catch (error) {
         console.error('Error fetching accounts:', error);

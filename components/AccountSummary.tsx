@@ -1,19 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { sampleAccounts } from '@/data/sampleData';
-import { Account } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { useGetAccounts } from '@/hooks/use-accounts';
+import { Loader2 } from 'lucide-react';
 
 export default function AccountSummary() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [totalBalance, setTotalBalance] = useState(0);
+  const { data: accounts, loading, error } = useGetAccounts();
+  
+  if (loading) {
+    return (
+      <div className="col-span-1 md:col-span-4 flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    setAccounts(sampleAccounts);
-    const total = sampleAccounts.reduce((sum, account) => sum + account.balance, 0);
-    setTotalBalance(total);
-  }, []);
+  if (error || !accounts) {
+    return (
+      <div className="col-span-1 md:col-span-4 p-4 text-center text-destructive">
+        {error || 'Failed to load accounts'}
+      </div>
+    );
+  }
+  
+  // Calculate total balance from accounts
+  const totalBalance = accounts.reduce((sum: number, account) => sum + Number(account.balance), 0);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -33,7 +44,7 @@ export default function AccountSummary() {
         </CardContent>
       </Card>
       
-      {accounts.map((account) => (
+      {accounts.map((account: any) => (
         <Card key={account.id} className="overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
