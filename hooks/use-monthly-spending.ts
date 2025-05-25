@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
 import { MonthlySpending } from '@/types';
+import { useDateRange } from '@/contexts/DateRangeContext';
 
-interface UseMonthlySpendingProps {
-  startDate?: Date;
-  endDate?: Date;
-}
-
-export function useMonthlySpending({
-  startDate,
-  endDate,
-}: UseMonthlySpendingProps = {}) {
+export function useMonthlySpending() {
+  const { dateRange } = useDateRange();
+  const { from: startDate, to: endDate } = dateRange;
   const [data, setData] = useState<MonthlySpending[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

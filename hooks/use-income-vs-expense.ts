@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDateRange } from '@/contexts/DateRangeContext';
 
 interface IncomeVsExpenseData {
   month: string;
@@ -6,15 +7,9 @@ interface IncomeVsExpenseData {
   expense: number;
 }
 
-interface UseIncomeVsExpenseProps {
-  startDate?: Date;
-  endDate?: Date;
-}
-
-export function useIncomeVsExpense({
-  startDate,
-  endDate,
-}: UseIncomeVsExpenseProps = {}) {
+export function useIncomeVsExpense() {
+  const { dateRange } = useDateRange();
+  const { from: startDate, to: endDate } = dateRange;
   const [data, setData] = useState<IncomeVsExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
 import { CategorySpending } from '@/types';
+import { useDateRange } from '@/contexts/DateRangeContext';
 
-interface UseCategorySpendingProps {
-  startDate?: Date;
-  endDate?: Date;
-}
-
-export function useCategorySpending({
-  startDate,
-  endDate,
-}: UseCategorySpendingProps = {}) {
+export function useCategorySpending() {
+  const { dateRange } = useDateRange();
+  const { from: startDate, to: endDate } = dateRange;
   const [data, setData] = useState<CategorySpending[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
