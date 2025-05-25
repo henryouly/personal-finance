@@ -176,7 +176,7 @@ export async function getMonthlySpending(
 ): Promise<{ month: string; total: number }[]> {
   return db
     .select({
-      month: sql<string>`to_char(${transactions.date}, 'YYYY-MM')`,
+      month: sql<string>`to_char(${transactions.date}, 'YYYY-MM')`.as('month'),
       total: sum(transactions.amount).mapWith(Number),
     })
     .from(transactions)
@@ -188,5 +188,5 @@ export async function getMonthlySpending(
       )
     )
     .groupBy(sql`to_char(${transactions.date}, 'YYYY-MM')`)
-    .orderBy(sql`month`);
+    .orderBy(sql`to_char(${transactions.date}, 'YYYY-MM')`);
 }
