@@ -12,12 +12,8 @@ import {
   type NewBudget,
   type NewTransaction,
 } from './schema';
-import {
-  sampleCategories,
-  sampleAccounts,
-  sampleBudgets,
-  sampleTransactions
-} from '../data/sampleData';
+import { sampleBudgets } from '../data/sampleData';
+import { sampleCategories, sampleAccounts, sampleTransactions } from './sampleData';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
