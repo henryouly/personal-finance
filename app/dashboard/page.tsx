@@ -19,7 +19,10 @@ export default function Dashboard() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Financial Dashboard</h1>
-        <Button>Upload Transactions</Button>
+        <div className="flex gap-2">
+          <Button variant="outline">Export</Button>
+          <Button>Upload Transactions</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -75,7 +78,7 @@ export default function Dashboard() {
               <CardDescription>View and manage your transactions</CardDescription>
             </CardHeader>
             <CardContent>
-              <TransactionList transactions={transactions} />
+              <TransactionList limit={10} />
             </CardContent>
           </Card>
         </TabsContent>

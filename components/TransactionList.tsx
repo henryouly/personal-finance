@@ -3,12 +3,26 @@
 import { useState } from 'react';
 import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
+import { useTransactions } from '@/hooks/use-transactions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TransactionListProps {
-  transactions: Transaction[];
+  accountId?: string;
+  categoryId?: string;
+  limit?: number;
 }
 
-export default function TransactionList({ transactions }: TransactionListProps) {
+export default function TransactionList({
+  accountId,
+  categoryId,
+  limit
+}: TransactionListProps) {
+  const { transactions, isLoading, error } = useTransactions({
+    accountId,
+    categoryId,
+    limit,
+  });
+
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -34,7 +48,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
       style: 'currency',
       currency: 'USD',
     }).format(Math.abs(amount));
-    
+
     return type === 'income' ? formatted : `-${formatted}`;
   };
 
@@ -47,25 +61,71 @@ export default function TransactionList({ transactions }: TransactionListProps) 
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2 justify-between items-center">
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-16" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-9" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          {Array(5).fill(0).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-4 text-destructive">
+        <p>Error loading transactions: {error.message}</p>
+        <Button
+          variant="outline"
+          className="mt-2"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="text-center p-4 text-muted-foreground">
+        No transactions found
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 justify-between items-center">
         <div className="flex gap-2">
-          <Button 
+          <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('all')}
           >
             All
           </Button>
-          <Button 
+          <Button
             variant={filter === 'income' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('income')}
           >
             Income
           </Button>
-          <Button 
+          <Button
             variant={filter === 'expense' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('expense')}
@@ -74,7 +134,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
           </Button>
         </div>
         <div className="flex gap-2">
-          <select 
+          <select
             className="border rounded p-1 text-sm"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -82,7 +142,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
             <option value="date">Date</option>
             <option value="amount">Amount</option>
           </select>
-          <Button 
+          <Button
             variant="outline"
             size="sm"
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
