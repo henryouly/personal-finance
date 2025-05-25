@@ -9,12 +9,6 @@ import { eq } from 'drizzle-orm';
 const app = new Hono()
   .get(
     '/',
-    zValidator(
-      'query',
-      z.object({
-        // Add any query parameters here if needed
-      })
-    ),
     async (c) => {
       try {
         // Get all accounts with their balances
