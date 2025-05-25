@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DateRangePicker } from '@/components/DateRangePicker';
 import TransactionList from '@/components/TransactionList';
 import SpendingByCategory from '@/components/charts/SpendingByCategory';
 import MonthlySpendingChart from '@/components/charts/MonthlySpendingChart';
@@ -15,11 +16,20 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Financial Dashboard</h1>
-        <div className="flex gap-2">
-          <Button variant="outline">Export</Button>
-          <Button>Upload Transactions</Button>
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold">Financial Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-48">
+                <DateRangePicker />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline">Export</Button>
+                <Button>Upload Transactions</Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
