@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { generateCategorySpending } from '@/data/sampleData';
 import { CategorySpending } from '@/types';
+import { useCategorySpending } from '@/hooks/use-category-spending';
 
 // Professional color palette
 const COLORS = [
@@ -20,11 +20,15 @@ const COLORS = [
 ];
 
 export default function SpendingByCategory() {
-  const [data, setData] = useState<CategorySpending[]>([]);
+  const { data: categoryData, isLoading, error } = useCategorySpending();
 
-  useEffect(() => {
-    setData(generateCategorySpending());
-  }, []);
+  // Merge colors with the data
+  const dataWithColors = useMemo(() => {
+    return categoryData.map((item, index) => ({
+      ...item,
+      color: COLORS[index % COLORS.length],
+    }));
+  }, [categoryData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -34,7 +38,23 @@ export default function SpendingByCategory() {
     }).format(value);
   };
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+  const renderCustomizedLabel = ({ 
+    cx, 
+    cy, 
+    midAngle, 
+    innerRadius, 
+    outerRadius, 
+    percent, 
+    index 
+  }: { 
+    cx: number; 
+    cy: number; 
+    midAngle: number; 
+    innerRadius: number; 
+    outerRadius: number; 
+    percent: number; 
+    index: number;
+  }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -47,11 +67,35 @@ export default function SpendingByCategory() {
     ) : null;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 text-center">
+        Error loading category spending data: {error.message}
+      </div>
+    );
+  }
+
+  if (dataWithColors.length === 0) {
+    return (
+      <div className="text-gray-500 p-4 text-center">
+        No spending data available
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
-          data={data}
+          data={dataWithColors}
           cx="50%"
           cy="50%"
           labelLine={false}
@@ -61,12 +105,12 @@ export default function SpendingByCategory() {
           dataKey="amount"
           nameKey="category"
         >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          {dataWithColors.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
         <Tooltip
-          formatter={(value) => [formatCurrency(value), 'Amount']}
+          formatter={(value) => [formatCurrency(Number(value)), 'Amount']}
           labelStyle={{ color: '#333' }}
         />
         <Legend />
