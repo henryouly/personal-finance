@@ -10,10 +10,8 @@ import MonthlySpendingChart from '@/components/charts/MonthlySpendingChart';
 import IncomeVsExpenseChart from '@/components/charts/IncomeVsExpenseChart';
 import BudgetOverview from '@/components/BudgetOverview';
 import AccountSummary from '@/components/AccountSummary';
-import { sampleTransactions } from '@/data/sampleData';
-
 export default function Dashboard() {
-  const [transactions, setTransactions] = useState(sampleTransactions);
+  const [transactions, setTransactions] = useState([]);
 
   return (
     <div className="container mx-auto py-8">
