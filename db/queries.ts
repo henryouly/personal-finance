@@ -151,23 +151,42 @@ export async function getCategorySpending(
     .groupBy(categories.name);
 }
 
+export interface IncomeVsExpenseData {
+  type: 'income' | 'expense';
+  total: number;
+  month: string;
+}
+
 export async function getIncomeVsExpense(
   startDate: Date,
   endDate: Date
-): Promise<{ type: 'income' | 'expense'; total: number }[]> {
-  return db
+): Promise<IncomeVsExpenseData[]> {
+  const result = await db
     .select({
-      type: transactions.type,
+      type: sql<string>`${transactions.type}`.as('type'),
       total: sum(transactions.amount).mapWith(Number),
+      month: sql<string>`to_char(${transactions.date}, 'YYYY-MM')`.as('month'),
     })
     .from(transactions)
     .where(
       and(
         gte(transactions.date, startDate),
-        lte(transactions.date, endDate)
+        lte(transactions.date, endDate),
+        sql`${transactions.type} IN ('income', 'expense')`
       )
     )
-    .groupBy(transactions.type);
+    .groupBy(
+      sql`to_char(${transactions.date}, 'YYYY-MM')`,
+      transactions.type
+    )
+    .orderBy(sql`to_char(${transactions.date}, 'YYYY-MM')`);
+
+  // Map the result to the expected type
+  return result.map(row => ({
+    type: row.type as 'income' | 'expense',
+    total: row.total,
+    month: row.month,
+  }));
 }
 
 export async function getMonthlySpending(
