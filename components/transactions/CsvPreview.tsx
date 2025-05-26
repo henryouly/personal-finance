@@ -29,23 +29,67 @@ type CsvPreviewProps = {
   headers: string[];
   fieldMappings: Record<string, TransactionField>;
   onFieldMappingChange: (header: string, field: TransactionField) => void;
-};
+  selectedRows?: number[];
+  onSelectedRowsChange?: (selectedRows: number[]) => void;
+}
 
 export function CsvPreview({
   data,
   headers,
   fieldMappings,
-  onFieldMappingChange
+  onFieldMappingChange,
+  selectedRows = [],
+  onSelectedRowsChange = () => {}
 }: CsvPreviewProps) {
   if (!data || data.length === 0) {
     return <div className="text-gray-500">No data to preview</div>;
   }
 
+  const allSelected = data.length > 0 && selectedRows.length === data.length;
+  const someSelected = selectedRows.length > 0 && !allSelected;
+
+  const toggleRow = (rowIndex: number) => {
+    const newSelected = [...selectedRows];
+    const index = newSelected.indexOf(rowIndex);
+    if (index === -1) {
+      newSelected.push(rowIndex);
+    } else {
+      newSelected.splice(index, 1);
+    }
+    onSelectedRowsChange(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      onSelectedRowsChange([]);
+    } else {
+      onSelectedRowsChange(Array.from({ length: data.length }, (_, i) => i));
+    }
+  };
+
   return (
     <div className="rounded-md border">
+      <div className="p-2 border-b bg-muted/50 text-sm">
+        {selectedRows.length} of {data.length} rows selected
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <div className="flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  checked={allSelected}
+                  ref={input => {
+                    if (input) {
+                      input.indeterminate = someSelected;
+                    }
+                  }}
+                  onChange={toggleSelectAll}
+                />
+              </div>
+            </TableHead>
             {headers.map((header, index) => (
               <TableHead key={index} className="font-medium">
                 <div className="flex flex-col space-y-1">
@@ -72,7 +116,17 @@ export function CsvPreview({
         </TableHeader>
         <TableBody>
           {data.slice(0, 10).map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
+            <TableRow key={rowIndex} className={selectedRows.includes(rowIndex) ? 'bg-muted/50' : ''}>
+              <TableCell className="w-12">
+                <div className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    checked={selectedRows.includes(rowIndex)}
+                    onChange={() => toggleRow(rowIndex)}
+                  />
+                </div>
+              </TableCell>
               {headers.map((header, cellIndex) => (
                 <TableCell key={`${rowIndex}-${cellIndex}`}>
                   {row[header] || ''}

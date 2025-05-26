@@ -14,6 +14,7 @@ export default function UploadTransactions() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
   const handleFieldMappingChange = useCallback((header: string, field: TransactionField) => {
     setFieldMappings(prev => ({
@@ -40,6 +41,7 @@ export default function UploadTransactions() {
     if (!selectedFile) return;
 
     setFile(selectedFile);
+    setSelectedRows([]);
     setIsLoading(true);
 
     const reader = new FileReader();
@@ -85,12 +87,27 @@ export default function UploadTransactions() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || previewData.length === 0) return;
+    if (!file || previewData.length === 0 || selectedRows.length === 0) return;
 
     try {
       setIsLoading(true);
-      // TODO: Implement actual upload logic
-      console.log('Uploading transactions:', previewData);
+
+      // Filter to only include selected rows
+      const transactionsToImport = selectedRows.map(index => {
+        const row = previewData[index];
+        const transaction: Record<string, string> = {};
+
+        // Map the fields according to the field mappings
+        Object.entries(fieldMappings).forEach(([header, field]) => {
+          if (field !== 'skip' && row[header] !== undefined) {
+            transaction[field] = row[header];
+          }
+        });
+
+        return transaction;
+      });
+
+      console.log('Uploading selected transactions:', transactionsToImport);
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -184,6 +201,8 @@ export default function UploadTransactions() {
                     headers={headers}
                     fieldMappings={fieldMappings}
                     onFieldMappingChange={handleFieldMappingChange}
+                    selectedRows={selectedRows}
+                    onSelectedRowsChange={setSelectedRows}
                   />
                 </div>
               </div>
@@ -199,9 +218,9 @@ export default function UploadTransactions() {
             </Button>
             <Button
               type="submit"
-              disabled={!isFormValid || isLoading}
+              disabled={!isFormValid || selectedRows.length === 0 || isLoading}
             >
-              {isLoading ? 'Importing...' : `Import ${previewData.length > 0 ? `(${previewData.length} transactions)` : ''}`}
+              {isLoading ? 'Importing...' : `Import ${selectedRows.length > 0 ? `(${selectedRows.length} transactions)` : ''}`}
             </Button>
           </CardFooter>
         </form>
