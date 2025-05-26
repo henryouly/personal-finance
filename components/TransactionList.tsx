@@ -5,6 +5,7 @@ import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useTransactions } from '@/hooks/use-transactions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EditableCategory } from './EditableCategory';
 
 interface TransactionListProps {
   accountId?: string;
@@ -169,9 +170,13 @@ export default function TransactionList({
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDate(transaction.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{transaction.description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {transaction.category}
-                  </span>
+                  <EditableCategory 
+                    category={transaction.category} 
+                    onCategoryChange={(newCategory) => {
+                      // TODO: Update the category in the database
+                      console.log(`Updating transaction ${transaction.id} category to ${newCategory}`);
+                    }}
+                  />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{transaction.account}</td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
