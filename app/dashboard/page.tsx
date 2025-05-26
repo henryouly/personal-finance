@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +10,8 @@ import MonthlySpendingChart from '@/components/charts/MonthlySpendingChart';
 import IncomeVsExpenseChart from '@/components/charts/IncomeVsExpenseChart';
 import BudgetOverview from '@/components/BudgetOverview';
 import AccountSummary from '@/components/AccountSummary';
-export default function Dashboard() {
-  const [transactions, setTransactions] = useState([]);
 
+export default function Dashboard() {
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">

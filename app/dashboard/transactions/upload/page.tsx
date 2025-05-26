@@ -19,7 +19,7 @@ export default function UploadTransactions() {
   const handleFieldMappingChange = useCallback((header: string, field: TransactionField) => {
     setFieldMappings(prev => ({
       ...prev,
-      [header]: field === 'skip' ? undefined : field
+      [header]: field
     }));
   }, []);
 
