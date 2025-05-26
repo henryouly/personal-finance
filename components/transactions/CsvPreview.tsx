@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button'; // Import Button component
 
 export type TransactionField =
   | 'skip'
@@ -41,6 +43,13 @@ export function CsvPreview({
   selectedRows = [],
   onSelectedRowsChange = () => {}
 }: CsvPreviewProps) {
+  const [visibleRows, setVisibleRows] = useState(10);
+  
+  const loadMoreRows = () => {
+    setVisibleRows(prev => Math.min(prev + 10, data.length));
+  };
+  
+  const hasMoreRows = visibleRows < data.length;
   if (!data || data.length === 0) {
     return <div className="text-gray-500">No data to preview</div>;
   }
@@ -115,7 +124,7 @@ export function CsvPreview({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.slice(0, 10).map((row, rowIndex) => (
+          {data.slice(0, visibleRows).map((row, rowIndex) => (
             <TableRow key={rowIndex} className={selectedRows.includes(rowIndex) ? 'bg-muted/50' : ''}>
               <TableCell className="w-12">
                 <div className="flex items-center justify-center">
@@ -136,11 +145,21 @@ export function CsvPreview({
           ))}
         </TableBody>
       </Table>
-      {data.length > 10 && (
-        <div className="p-2 text-sm text-gray-500 text-center">
-          Showing 10 of {data.length} rows
+      <div className="p-2 text-sm text-gray-500 text-center border-t">
+        <div className="mb-2">
+          Showing {Math.min(visibleRows, data.length)} of {data.length} rows
         </div>
-      )}
+        {hasMoreRows && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadMoreRows}
+            className="w-full max-w-xs"
+          >
+            Load More
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
