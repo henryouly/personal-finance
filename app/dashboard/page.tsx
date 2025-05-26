@@ -33,10 +33,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <AccountSummary />
-      </div>
-
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -46,37 +42,10 @@ export default function Dashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Spending</CardTitle>
-                <CardDescription>Your spending over the last 12 months</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <MonthlySpendingChart />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Spending by Category</CardTitle>
-                <CardDescription>How your money is spent across categories</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <SpendingByCategory />
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <AccountSummary />
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Income vs. Expenses</CardTitle>
-              <CardDescription>Compare your income and expenses over time</CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              <IncomeVsExpenseChart />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-6">
@@ -121,6 +90,15 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="h-80">
                 <SpendingByCategory />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Income vs. Expenses</CardTitle>
+                <CardDescription>Compare your income and expenses over time</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <IncomeVsExpenseChart />
               </CardContent>
             </Card>
           </div>
