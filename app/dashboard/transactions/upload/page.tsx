@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { CsvPreview } from '@/components/transactions/CsvPreview';
+import { CsvPreview, TransactionField, TRANSACTION_FIELDS } from '@/components/transactions/CsvPreview';
 
 export default function UploadTransactions() {
   const router = useRouter();
@@ -13,8 +13,29 @@ export default function UploadTransactions() {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
+
+  const handleFieldMappingChange = useCallback((header: string, field: TransactionField) => {
+    setFieldMappings(prev => ({
+      ...prev,
+      [header]: field === 'skip' ? undefined : field
+    }));
+  }, []);
+
+  const requiredFields = useMemo(() =>
+    TRANSACTION_FIELDS.filter(field => field.required).map(field => field.value),
+    []
+  );
+
+  const isFormValid = useMemo(() => {
+    if (previewData.length === 0) return false;
+
+    const mappedFields = new Set(Object.values(fieldMappings).filter(Boolean));
+    return requiredFields.every(field => mappedFields.has(field as TransactionField));
+  }, [previewData, fieldMappings, requiredFields]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFieldMappings({});
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
@@ -154,7 +175,17 @@ export default function UploadTransactions() {
             ) : previewData.length > 0 ? (
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Preview</h3>
-                <CsvPreview data={previewData} headers={headers} />
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Map each column to a transaction field. Required fields are marked with <span className="text-destructive">*</span>
+                  </p>
+                  <CsvPreview
+                    data={previewData}
+                    headers={headers}
+                    fieldMappings={fieldMappings}
+                    onFieldMappingChange={handleFieldMappingChange}
+                  />
+                </div>
               </div>
             ) : null}
           </CardContent>
@@ -168,7 +199,7 @@ export default function UploadTransactions() {
             </Button>
             <Button
               type="submit"
-              disabled={previewData.length === 0 || isLoading}
+              disabled={!isFormValid || isLoading}
             >
               {isLoading ? 'Importing...' : `Import ${previewData.length > 0 ? `(${previewData.length} transactions)` : ''}`}
             </Button>
