@@ -115,6 +115,66 @@ const app = new Hono()
         );
       }
     }
-  );
+  )
+  .post(
+    '/upload',
+    zValidator(
+      'json',
+      z.object({
+        transactions: z.array(
+          z.object({
+            date: z.string().or(z.date()),
+            description: z.string(),
+            amount: z.string(),
+            accountId: z.string().uuid(),
+            categoryId: z.string().uuid().optional(),
+          })
+        ).min(1, 'At least one transaction is required')
+      })
+    ),
+    async (c) => {
+      try {
+        const { transactions: transactionsToImport } = c.req.valid('json');
+
+        // Format transactions data
+        const formattedTransactions = transactionsToImport.map((tx: any) => ({
+          ...tx,
+          date: new Date(tx.date),
+          amount: parseFloat(tx.amount).toFixed(2),
+          type: parseFloat(tx.amount) < 0 ? 'expense' : 'income',
+        }));
+
+        // Insert transactions one by one since transactions aren't supported in the HTTP driver
+        const results = [];
+        for (const tx of formattedTransactions) {
+          try {
+            const result = await db.insert(transactions)
+              .values(tx)
+              .returning();
+            results.push(...result);
+          } catch (error) {
+            console.error('Error inserting transaction:', tx, error);
+            throw error; // Stop on first error
+          }
+        }
+
+        return c.json({
+          success: true,
+          count: results.length,
+          transactions: results
+        });
+      } catch (error) {
+        console.error('Error importing transactions:', error);
+        return c.json(
+          {
+            success: false,
+            error: 'Failed to import transactions',
+            details: error instanceof Error ? error.message : 'Unknown error'
+          },
+          500
+        );
+      }
+    }
+  )
 
 export default app;

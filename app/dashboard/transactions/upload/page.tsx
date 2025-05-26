@@ -104,13 +104,45 @@ export default function UploadTransactions() {
           }
         });
 
+        // Ensure date is in ISO string format
+        if (transaction.date) {
+          const date = new Date(transaction.date);
+          if (!isNaN(date.getTime())) {
+            transaction.date = date.toISOString();
+          }
+        }
+
+        transaction.accountId = "8ade9e81-1952-4458-86d7-b83ea7c450af";
+
         return transaction;
       });
 
       console.log('Uploading selected transactions:', transactionsToImport);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Format transactions data according to the API schema
+      const formattedTransactions = transactionsToImport.map(tx => ({
+        date: tx.date, // Already in ISO string format from previous formatting
+        description: tx.description,
+        amount: tx.amount, // string
+        accountId: tx.accountId,
+        categoryId: tx.categoryId || undefined, // Send undefined instead of empty string if no category
+      }));
+      // Submit to API
+      const response = await fetch('/api/transactions/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transactions: formattedTransactions }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to import transactions');
+      }
+
+      console.log('Successfully imported transactions:', result);
 
       // On successful upload, redirect to dashboard
       router.push('/dashboard');
