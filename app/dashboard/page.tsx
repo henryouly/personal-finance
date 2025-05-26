@@ -26,7 +26,9 @@ export default function Dashboard() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline">Export</Button>
-                <Button>Upload Transactions</Button>
+                <Button asChild>
+                  <a href="/dashboard/transactions/upload">Upload Transactions</a>
+                </Button>
               </div>
             </div>
           </div>
