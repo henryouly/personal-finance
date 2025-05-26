@@ -3,7 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export type TransactionField = 
+export type TransactionField =
   | 'skip'
   | 'date'
   | 'amount'
@@ -18,9 +18,9 @@ type FieldOption = {
 
 export const TRANSACTION_FIELDS: FieldOption[] = [
   { value: 'skip', label: 'Skip', required: false },
-  { value: 'date', label: 'Date (Required)', required: true },
-  { value: 'amount', label: 'Amount (Required)', required: true },
-  { value: 'description', label: 'Description (Required)', required: true },
+  { value: 'date', label: 'Date', required: true },
+  { value: 'amount', label: 'Amount', required: true },
+  { value: 'description', label: 'Description', required: true },
   { value: 'category', label: 'Category', required: false },
 ];
 
@@ -31,11 +31,11 @@ type CsvPreviewProps = {
   onFieldMappingChange: (header: string, field: TransactionField) => void;
 };
 
-export function CsvPreview({ 
-  data, 
-  headers, 
-  fieldMappings, 
-  onFieldMappingChange 
+export function CsvPreview({
+  data,
+  headers,
+  fieldMappings,
+  onFieldMappingChange
 }: CsvPreviewProps) {
   if (!data || data.length === 0) {
     return <div className="text-gray-500">No data to preview</div>;
@@ -60,7 +60,7 @@ export function CsvPreview({
                     <SelectContent>
                       {TRANSACTION_FIELDS.map((field) => (
                         <SelectItem key={field.value} value={field.value}>
-                          {field.label}
+                          {field.label} {field.required ? ' (*)' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
