@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+import { useGetAccounts } from '@/hooks/use-accounts';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,8 @@ export default function UploadTransactions() {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const { data: accounts, loading: accountsLoading } = useGetAccounts();
   const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
@@ -29,11 +32,10 @@ export default function UploadTransactions() {
   );
 
   const isFormValid = useMemo(() => {
-    if (previewData.length === 0) return false;
-
-    const mappedFields = new Set(Object.values(fieldMappings).filter(Boolean));
-    return requiredFields.every(field => mappedFields.has(field as TransactionField));
-  }, [previewData, fieldMappings, requiredFields]);
+    return Object.values(requiredFields).every(field =>
+      Object.values(fieldMappings).includes(field as TransactionField)
+    ) && selectedAccountId !== '' && previewData.length > 0;
+  }, [fieldMappings, selectedAccountId, previewData]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFieldMappings({});
@@ -112,7 +114,7 @@ export default function UploadTransactions() {
           }
         }
 
-        transaction.accountId = "8ade9e81-1952-4458-86d7-b83ea7c450af";
+        transaction.accountId = selectedAccountId;
 
         return transaction;
       });
@@ -179,6 +181,26 @@ export default function UploadTransactions() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="account" className="block text-sm font-medium text-foreground">
+                Select Account <span className="text-destructive">*</span>
+              </label>
+              <select
+                id="account"
+                value={selectedAccountId}
+                onChange={(e) => setSelectedAccountId(e.target.value)}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:text-sm"
+                disabled={accountsLoading || isLoading}
+                required
+              >
+                <option value="">Select an account</option>
+                {accounts?.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} ({account.type})
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="flex items-center justify-center w-full">
               <label
                 htmlFor="file-upload"
