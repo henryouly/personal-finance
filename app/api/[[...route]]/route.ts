@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception';
 import accounts from "./accounts";
 import transactions from "./transactions";
 import analytics from "./analytics";
+import categories from "./categories";
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api');
@@ -20,7 +21,8 @@ app.onError((err, c) => {
 const routes = app
   .route("/accounts", accounts)
   .route("/transactions", transactions)
-  .route("/analytics", analytics);
+  .route("/analytics", analytics)
+  .route("/categories", categories);
 
 export const GET = handle(app);
 export const POST = handle(app);
