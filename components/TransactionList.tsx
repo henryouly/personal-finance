@@ -19,10 +19,10 @@ export default function TransactionList({
   categoryId,
   pageSize = 20,
 }: TransactionListProps) {
-  const { 
-    transactions: initialTransactions = [], 
+  const {
+    transactions: initialTransactions = [],
     pagination,
-    isLoading, 
+    isLoading,
     error,
     nextPage,
     prevPage,
@@ -203,7 +203,7 @@ export default function TransactionList({
             </tr>
           </thead>
           <tbody className="bg-card divide-y divide-gray-200">
-            {sortedTransactions.map((transaction) => (
+            {sortedTransactions.slice((pagination.page - 1) * pagination.pageSize, pagination.page * pagination.pageSize).map((transaction) => (
               <tr key={transaction.id} className="hover:bg-muted/50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDate(transaction.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{transaction.description}</td>
@@ -223,7 +223,7 @@ export default function TransactionList({
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination Controls */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-gray-500">
@@ -251,7 +251,7 @@ export default function TransactionList({
               } else {
                 pageNum = pagination.page - 2 + i;
               }
-              
+
               return (
                 <Button
                   key={pageNum}

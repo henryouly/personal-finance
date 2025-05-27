@@ -22,7 +22,6 @@ interface PaginationInfo {
 export function useTransactions({
   accountId,
   categoryId,
-  page = 1,
   pageSize = 10,
   startDate,
   endDate,
@@ -36,9 +35,7 @@ export function useTransactions({
     hasNextPage: false,
     hasPreviousPage: false,
   });
-  
-  // Calculate offset based on current page and page size
-  const offset = (pagination.page - 1) * pagination.pageSize;
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -46,26 +43,23 @@ export function useTransactions({
     const fetchTransactions = async () => {
       try {
         setIsLoading(true);
-        const params = new URLSearchParams({
-          offset: offset.toString(),
-          limit: pagination.pageSize.toString(),
-        });
-        
-        if (accountId) params.set('accountId', accountId);
-        if (categoryId) params.set('categoryId', categoryId);
-        if (startDate) params.set('startDate', startDate.toISOString());
-        if (endDate) params.set('endDate', endDate.toISOString());
+        const params = new URLSearchParams();
+
+        if (accountId) params.append('accountId', accountId);
+        if (categoryId) params.append('categoryId', categoryId);
+        if (startDate) params.append('startDate', startDate.toISOString());
+        if (endDate) params.append('endDate', endDate.toISOString());
 
         const response = await fetch(`/api/transactions?${params.toString()}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch transactions');
         }
 
         const { data } = await response.json();
-        
+
         // Transform the API response to match the Transaction type
-        const transformedData = data.items.map((tx: any) => ({
+        const transformedData = data.map((tx: any) => ({
           id: tx.id,
           date: tx.date,
           description: tx.description,
@@ -78,7 +72,14 @@ export function useTransactions({
         }));
 
         setTransactions(transformedData);
-        setPagination(data.pagination);
+        setPagination({
+          page: 1,
+          pageSize,
+          total: data.length,
+          totalPages: Math.ceil(data.length / pageSize),
+          hasNextPage: data.length > pageSize,
+          hasPreviousPage: false,
+        })
       } catch (err) {
         console.error('Error fetching transactions:', err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -88,13 +89,15 @@ export function useTransactions({
     };
 
     fetchTransactions();
-  }, [accountId, categoryId, pagination.page, pagination.pageSize, startDate, endDate, offset]);
+  }, [accountId, categoryId, pageSize, startDate, endDate]);
 
   // Function to change page
   const goToPage = (newPage: number) => {
     setPagination(prev => ({
       ...prev,
       page: Math.max(1, Math.min(newPage, prev.totalPages)),
+      hasPreviousPage: newPage > 1,
+      hasNextPage: newPage < prev.totalPages,
     }));
   };
 
@@ -102,17 +105,20 @@ export function useTransactions({
   const setPageSize = (newPageSize: number) => {
     setPagination(prev => ({
       ...prev,
+      totalPages: Math.ceil(prev.total / newPageSize),
       pageSize: Math.max(1, newPageSize),
       page: 1, // Reset to first page when changing page size
+      hasPreviousPage: false,
+      hasNextPage: prev.total > newPageSize,
     }));
   };
 
-  return { 
-    transactions, 
-    pagination, 
-    isLoading, 
-    error, 
-    goToPage, 
+  return {
+    transactions,
+    pagination,
+    isLoading,
+    error,
+    goToPage,
     setPageSize,
     nextPage: () => pagination.hasNextPage && goToPage(pagination.page + 1),
     prevPage: () => pagination.hasPreviousPage && goToPage(pagination.page - 1),
