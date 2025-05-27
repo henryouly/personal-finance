@@ -55,7 +55,7 @@ export default function Dashboard() {
               <CardDescription>View and manage your transactions</CardDescription>
             </CardHeader>
             <CardContent>
-              <TransactionList limit={10} />
+              <TransactionList pageSize={10} />
             </CardContent>
           </Card>
         </TabsContent>

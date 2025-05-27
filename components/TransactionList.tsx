@@ -11,18 +11,27 @@ import { EditableCategory } from './EditableCategory';
 interface TransactionListProps {
   accountId?: string;
   categoryId?: string;
-  limit?: number;
+  pageSize?: number;
 }
 
 export default function TransactionList({
   accountId,
   categoryId,
-  limit
+  pageSize = 20,
 }: TransactionListProps) {
-  const { transactions: initialTransactions, isLoading, error } = useTransactions({
+  const { 
+    transactions: initialTransactions = [], 
+    pagination,
+    isLoading, 
+    error,
+    nextPage,
+    prevPage,
+    goToPage,
+    setPageSize,
+  } = useTransactions({
     accountId,
     categoryId,
-    limit,
+    pageSize,
   });
 
   // Get categories for the dropdown
@@ -30,6 +39,9 @@ export default function TransactionList({
 
   // Local state for optimistic updates
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [filter, setFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   // Update local state when initialTransactions changes
   useEffect(() => {
@@ -38,7 +50,6 @@ export default function TransactionList({
 
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {
-    // Save the current state for potential rollback
     const previousTransactions = transactions;
 
     // Optimistic update
@@ -56,33 +67,22 @@ export default function TransactionList({
     );
 
     try {
-      // Find the category ID from the categories list
       const categoryId = categories?.find((cat: { name: string; id: string }) => cat.name === newCategory)?.id || null;
-
       const response = await fetch(`/api/transactions/${transactionId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categoryId }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to update category');
       }
-
     } catch (error) {
       console.error('Failed to update category:', error);
-      // Revert on error
       setTransactions(previousTransactions);
-      // Show error toast or notification
       alert('Failed to update category. Please try again.');
     }
   };
-
-  const [filter, setFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
 
   const filteredTransactions = transactions.filter((transaction) => {
     if (filter === 'all') return true;
@@ -122,44 +122,24 @@ export default function TransactionList({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-wrap gap-2 justify-between items-center">
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-16" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-24" />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-9 w-9" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          {Array(5).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
+        {Array(5).fill(0).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center p-4 text-destructive">
-        <p>Error loading transactions: {error.message}</p>
-        <Button
-          variant="outline"
-          className="mt-2"
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </Button>
+      <div className="text-red-500 text-center p-4">
+        Error loading transactions: {error.message}
       </div>
     );
   }
 
-  if (transactions.length === 0) {
+  if (initialTransactions.length === 0) {
     return (
-      <div className="text-center p-4 text-muted-foreground">
+      <div className="text-center text-gray-500 py-8">
         No transactions found
       </div>
     );
@@ -191,9 +171,9 @@ export default function TransactionList({
             Expenses
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <select
-            className="border rounded p-1 text-sm"
+            className="border rounded p-1 text-sm h-9"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
@@ -204,6 +184,7 @@ export default function TransactionList({
             variant="outline"
             size="sm"
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="h-9 w-9 p-0"
           >
             {sortOrder === 'asc' ? '↑' : '↓'}
           </Button>
@@ -241,6 +222,74 @@ export default function TransactionList({
             ))}
           </tbody>
         </table>
+      </div>
+      
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-500">
+          Showing {Math.min(initialTransactions.length, pagination.pageSize)} of {pagination.total} transactions
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={prevPage}
+            disabled={!pagination.hasPreviousPage || isLoading}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center space-x-1">
+            {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, i) => {
+              // Show pages around current page
+              let pageNum;
+              if (pagination.totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (pagination.page <= 3) {
+                pageNum = i + 1;
+              } else if (pagination.page >= pagination.totalPages - 2) {
+                pageNum = pagination.totalPages - 4 + i;
+              } else {
+                pageNum = pagination.page - 2 + i;
+              }
+              
+              return (
+                <Button
+                  key={pageNum}
+                  variant={pagination.page === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => goToPage(pageNum)}
+                  disabled={isLoading}
+                  className="w-10 h-10 p-0"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={nextPage}
+            disabled={!pagination.hasNextPage || isLoading}
+          >
+            Next
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">Page Size:</span>
+          <select
+            value={pagination.pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="p-1 border rounded text-sm"
+            disabled={isLoading}
+          >
+            {[10, 20, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

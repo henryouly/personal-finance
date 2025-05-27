@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { db } from '@/db/db';
 import { transactions, accounts, categories } from '@/db/schema';
-import { eq, and, desc, gte, lte } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
 
 // Define the router
 const app = new Hono()
@@ -16,11 +16,12 @@ const app = new Hono()
         categoryId: z.string().uuid().optional(),
         startDate: z.string().datetime().optional(),
         endDate: z.string().datetime().optional(),
-        limit: z.coerce.number().int().positive().optional(),
+        offset: z.coerce.number().int().min(0).default(0),
+        limit: z.coerce.number().int().min(1).max(100).default(10),
       })
     ),
     async (c) => {
-      const { accountId, categoryId, startDate, endDate, limit } = c.req.valid('query');
+      const { accountId, categoryId, startDate, endDate, offset, limit } = c.req.valid('query');
 
       try {
         // Build the where clause based on query params
@@ -31,8 +32,18 @@ const app = new Hono()
           endDate ? lte(transactions.date, new Date(endDate)) : undefined
         );
 
-        // Get transactions with related data
-        const allTransactions = await db.query.transactions.findMany({
+        // Get total count for pagination
+        // Get total count for pagination
+        const totalCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(transactions)
+          .where(whereClause);
+        
+        const total = Number(totalCountResult[0].count);
+        const totalPages = Math.ceil(total / limit);
+
+        // Get paginated transactions with related data
+        const paginatedTransactions = await db.query.transactions.findMany({
           where: whereClause,
           with: {
             category: {
@@ -50,11 +61,22 @@ const app = new Hono()
           },
           orderBy: [desc(transactions.date)],
           limit: limit,
+          offset: offset,
         });
 
         return c.json({
           success: true,
-          data: allTransactions,
+          data: {
+            items: paginatedTransactions,
+            pagination: {
+              page: Math.floor(offset / limit) + 1,
+              pageSize: limit,
+              total: total,
+              totalPages: totalPages,
+              hasNextPage: offset + limit < total,
+              hasPreviousPage: offset > 0,
+            },
+          },
         });
       } catch (error) {
         console.error('Error fetching transactions:', error);
