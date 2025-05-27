@@ -177,4 +177,98 @@ const app = new Hono()
     }
   )
 
+  .patch(
+    '/:id',
+    zValidator(
+      'param',
+      z.object({
+        id: z.string().uuid(),
+      })
+    ),
+    zValidator(
+      'json',
+      z.object({
+        id: z.string().uuid().optional(),
+        date: z.string().datetime().or(z.date()),
+        description: z.string(),
+        amount: z.string(),
+        type: z.enum(['income', 'expense']),
+        categoryId: z.string().uuid().nullable(),
+        accountId: z.string().uuid(),
+      }).partial()
+    ),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      const updateData = c.req.valid('json');
+
+      try {
+        // Check if transaction exists
+        const existingTx = await db.query.transactions.findFirst({
+          where: eq(transactions.id, id),
+        });
+
+        if (!existingTx) {
+          return c.json(
+            { success: false, error: 'Transaction not found' },
+            404
+          );
+        }
+
+        // Prepare update data with proper types and handle date conversion
+        const { date, ...restData } = updateData;
+        const updatePayload = {
+          ...restData,
+          ...(date && { date: new Date(date) }),
+          updatedAt: new Date()
+        };
+
+        // Update the transaction
+        const [updatedTx] = await db
+          .update(transactions)
+          .set(updatePayload)
+          .where(eq(transactions.id, id))
+          .returning({
+            id: transactions.id,
+            date: transactions.date,
+            description: transactions.description,
+            amount: transactions.amount,
+            type: transactions.type,
+            categoryId: transactions.categoryId,
+            accountId: transactions.accountId,
+            updatedAt: transactions.updatedAt,
+          });
+
+        // Get the updated transaction with related data
+        const result = await db.query.transactions.findFirst({
+          where: eq(transactions.id, updatedTx.id),
+          with: {
+            category: {
+              columns: {
+                name: true,
+                color: true,
+              },
+            },
+            account: {
+              columns: {
+                name: true,
+                color: true,
+              },
+            },
+          },
+        });
+
+        return c.json({
+          success: true,
+          data: result,
+        });
+      } catch (error) {
+        console.error('Error updating transaction:', error);
+        return c.json(
+          { success: false, error: 'Failed to update transaction' },
+          500
+        );
+      }
+    }
+  );
+
 export default app;

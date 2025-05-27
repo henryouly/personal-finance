@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
-import { useTransactions } from '@/hooks/use-transactions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTransactions } from '@/hooks/use-transactions';
+import { useGetCategories } from '@/hooks/use-categories';
 import { EditableCategory } from './EditableCategory';
 
 interface TransactionListProps {
@@ -18,11 +19,66 @@ export default function TransactionList({
   categoryId,
   limit
 }: TransactionListProps) {
-  const { transactions, isLoading, error } = useTransactions({
+  const { transactions: initialTransactions, isLoading, error } = useTransactions({
     accountId,
     categoryId,
     limit,
   });
+  
+  // Get categories for the dropdown
+  const { data: categories } = useGetCategories();
+  
+  // Local state for optimistic updates
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  
+  // Update local state when initialTransactions changes
+  useEffect(() => {
+    setTransactions(initialTransactions);
+  }, [initialTransactions]);
+  
+  // Handle category update
+  const handleCategoryChange = async (transactionId: string, newCategory: string) => {
+    // Save the current state for potential rollback
+    const previousTransactions = transactions;
+    
+    // Optimistic update
+    setTransactions(prevTransactions => 
+      prevTransactions.map(tx => {
+        if (tx.id === transactionId) {
+          return {
+            ...tx,
+            category: newCategory,
+            categoryId: categories?.find((c: { name: string; id: string }) => c.name === newCategory)?.id || null
+          };
+        }
+        return tx;
+      })
+    );
+    
+    try {
+      // Find the category ID from the categories list
+      const categoryId = categories?.find((cat: { name: string; id: string }) => cat.name === newCategory)?.id || null;
+      
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ categoryId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update category');
+      }
+      
+    } catch (error) {
+      console.error('Failed to update category:', error);
+      // Revert on error
+      setTransactions(previousTransactions);
+      // Show error toast or notification
+      alert('Failed to update category. Please try again.');
+    }
+  };
 
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -172,10 +228,8 @@ export default function TransactionList({
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <EditableCategory 
                     category={transaction.category} 
-                    onCategoryChange={(newCategory) => {
-                      // TODO: Update the category in the database
-                      console.log(`Updating transaction ${transaction.id} category to ${newCategory}`);
-                    }}
+                    onCategoryChange={(newCategory) => handleCategoryChange(transaction.id, newCategory)}
+                    className="text-xs"
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{transaction.account}</td>
