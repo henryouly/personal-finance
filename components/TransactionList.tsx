@@ -24,25 +24,25 @@ export default function TransactionList({
     categoryId,
     limit,
   });
-  
+
   // Get categories for the dropdown
   const { data: categories } = useGetCategories();
-  
+
   // Local state for optimistic updates
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
-  
+
   // Update local state when initialTransactions changes
   useEffect(() => {
     setTransactions(initialTransactions);
   }, [initialTransactions]);
-  
+
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {
     // Save the current state for potential rollback
     const previousTransactions = transactions;
-    
+
     // Optimistic update
-    setTransactions(prevTransactions => 
+    setTransactions(prevTransactions =>
       prevTransactions.map(tx => {
         if (tx.id === transactionId) {
           return {
@@ -54,11 +54,11 @@ export default function TransactionList({
         return tx;
       })
     );
-    
+
     try {
       // Find the category ID from the categories list
       const categoryId = categories?.find((cat: { name: string; id: string }) => cat.name === newCategory)?.id || null;
-      
+
       const response = await fetch(`/api/transactions/${transactionId}`, {
         method: 'PATCH',
         headers: {
@@ -66,11 +66,11 @@ export default function TransactionList({
         },
         body: JSON.stringify({ categoryId }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update category');
       }
-      
+
     } catch (error) {
       console.error('Failed to update category:', error);
       // Revert on error
@@ -115,6 +115,7 @@ export default function TransactionList({
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC'  // This ensures the date isn't shifted by local timezone
     });
   };
 
@@ -226,8 +227,8 @@ export default function TransactionList({
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDate(transaction.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{transaction.description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <EditableCategory 
-                    category={transaction.category} 
+                  <EditableCategory
+                    category={transaction.category}
                     onCategoryChange={(newCategory) => handleCategoryChange(transaction.id, newCategory)}
                     className="text-xs"
                   />
