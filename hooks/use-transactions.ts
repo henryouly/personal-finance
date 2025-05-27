@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
+import { usePagination } from './use-pagination';
 
 interface UseTransactionsProps {
   accountId?: string;
@@ -10,15 +11,6 @@ interface UseTransactionsProps {
   endDate?: Date;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
 export function useTransactions({
   accountId,
   categoryId,
@@ -27,14 +19,7 @@ export function useTransactions({
   endDate,
 }: UseTransactionsProps = {}) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, // Start with page 1 for UI
-    pageSize,
-    total: 0,
-    totalPages: 0,
-    hasNextPage: false,
-    hasPreviousPage: false,
-  });
+  const { updateTotalItems } = usePagination({ pageSize });
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -72,14 +57,6 @@ export function useTransactions({
         }));
 
         setTransactions(transformedData);
-        setPagination({
-          page: 1,
-          pageSize,
-          total: data.length,
-          totalPages: Math.ceil(data.length / pageSize),
-          hasNextPage: data.length > pageSize,
-          hasPreviousPage: false,
-        })
       } catch (err) {
         console.error('Error fetching transactions:', err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -91,36 +68,9 @@ export function useTransactions({
     fetchTransactions();
   }, [accountId, categoryId, pageSize, startDate, endDate]);
 
-  // Function to change page
-  const goToPage = (newPage: number) => {
-    setPagination(prev => ({
-      ...prev,
-      page: Math.max(1, Math.min(newPage, prev.totalPages)),
-      hasPreviousPage: newPage > 1,
-      hasNextPage: newPage < prev.totalPages,
-    }));
-  };
-
-  // Function to change page size
-  const setPageSize = (newPageSize: number) => {
-    setPagination(prev => ({
-      ...prev,
-      totalPages: Math.ceil(prev.total / newPageSize),
-      pageSize: Math.max(1, newPageSize),
-      page: 1, // Reset to first page when changing page size
-      hasPreviousPage: false,
-      hasNextPage: prev.total > newPageSize,
-    }));
-  };
-
   return {
     transactions,
-    pagination,
     isLoading,
     error,
-    goToPage,
-    setPageSize,
-    nextPage: () => pagination.hasNextPage && goToPage(pagination.page + 1),
-    prevPage: () => pagination.hasPreviousPage && goToPage(pagination.page - 1),
   };
 }

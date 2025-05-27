@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTransactions } from '@/hooks/use-transactions';
 import { useGetCategories } from '@/hooks/use-categories';
 import { EditableCategory } from './EditableCategory';
+import { usePagination } from '@/hooks/use-pagination';
 
 interface TransactionListProps {
   accountId?: string;
@@ -21,18 +22,22 @@ export default function TransactionList({
 }: TransactionListProps) {
   const {
     transactions: initialTransactions = [],
-    pagination,
     isLoading,
     error,
-    nextPage,
-    prevPage,
-    goToPage,
-    setPageSize,
   } = useTransactions({
     accountId,
     categoryId,
     pageSize,
   });
+
+  const {
+    pagination,
+    goToPage,
+    setPageSize,
+    nextPage,
+    prevPage,
+    updateTotalItems,
+  } = usePagination({ pageSize });
 
   // Get categories for the dropdown
   const { data: categories } = useGetCategories();
@@ -46,6 +51,7 @@ export default function TransactionList({
   // Update local state when initialTransactions changes
   useEffect(() => {
     setTransactions(initialTransactions);
+    updateTotalItems(initialTransactions.length);
   }, [initialTransactions]);
 
   // Handle category update
