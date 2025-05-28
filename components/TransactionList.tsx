@@ -10,23 +10,17 @@ import { EditableCategory } from './EditableCategory';
 import { usePagination } from '@/hooks/use-pagination';
 
 interface TransactionListProps {
-  accountId?: string;
-  categoryId?: string;
-  pageSize?: number;
+  pageSize: number;
 }
 
 export default function TransactionList({
-  accountId,
-  categoryId,
-  pageSize = 20,
+  pageSize,
 }: TransactionListProps) {
   const {
     transactions: initialTransactions = [],
     isLoading,
     error,
   } = useTransactions({
-    accountId,
-    categoryId,
     pageSize,
   });
 

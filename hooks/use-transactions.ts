@@ -1,25 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
-import { usePagination } from './use-pagination';
 
 interface UseTransactionsProps {
-  accountId?: string;
-  categoryId?: string;
-  page?: number;
   pageSize?: number;
   startDate?: Date;
   endDate?: Date;
 }
 
 export function useTransactions({
-  accountId,
-  categoryId,
-  pageSize = 10,
+  pageSize,
   startDate,
   endDate,
 }: UseTransactionsProps = {}) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const { updateTotalItems } = usePagination({ pageSize });
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -30,8 +23,6 @@ export function useTransactions({
         setIsLoading(true);
         const params = new URLSearchParams();
 
-        if (accountId) params.append('accountId', accountId);
-        if (categoryId) params.append('categoryId', categoryId);
         if (startDate) params.append('startDate', startDate.toISOString());
         if (endDate) params.append('endDate', endDate.toISOString());
 
@@ -66,7 +57,7 @@ export function useTransactions({
     };
 
     fetchTransactions();
-  }, [accountId, categoryId, pageSize, startDate, endDate]);
+  }, [pageSize, startDate, endDate]);
 
   return {
     transactions,
