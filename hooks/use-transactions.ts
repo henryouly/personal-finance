@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
+import { client } from '@/lib/holo';
 
 interface UseTransactionsProps {
   pageSize?: number;
@@ -13,7 +14,6 @@ export function useTransactions({
   endDate,
 }: UseTransactionsProps = {}) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -21,12 +21,12 @@ export function useTransactions({
     const fetchTransactions = async () => {
       try {
         setIsLoading(true);
-        const params = new URLSearchParams();
-
-        if (startDate) params.append('startDate', startDate.toISOString());
-        if (endDate) params.append('endDate', endDate.toISOString());
-
-        const response = await fetch(`/api/transactions?${params.toString()}`);
+        const response = await client.api.transactions.$get({
+          query: {
+            startDate: startDate?.toISOString(),
+            endDate: endDate?.toISOString(),
+          },
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch transactions');
