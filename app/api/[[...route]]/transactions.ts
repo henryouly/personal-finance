@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { db } from '@/db/db';
-import { transactions, accounts, categories } from '@/db/schema';
+import { transactions } from '@/db/schema';
 import { eq, and, desc, gte, lte } from 'drizzle-orm';
 
 // Define the router

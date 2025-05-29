@@ -20,14 +20,6 @@ const formatMonth = (monthStr: string) => {
 export default function MonthlySpendingChart() {
   const { data: monthlyData, isLoading, error } = useMonthlySpending();
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
-
   // Format the data for the chart
   const chartData = useMemo<ChartDataPoint[]>(() => {
     return monthlyData.map(item => ({
@@ -72,22 +64,22 @@ export default function MonthlySpendingChart() {
         }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
-        <XAxis 
-          dataKey="formattedMonth" 
+        <XAxis
+          dataKey="formattedMonth"
           axisLine={false}
           tickLine={false}
           tick={{ fill: '#666', fontSize: 12 }}
         />
-        <YAxis 
+        <YAxis
           axisLine={false}
           tickLine={false}
           tick={{ fill: '#666', fontSize: 12 }}
           tickFormatter={(value: number) => `$${value / 1000}k`}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Bar 
-          dataKey="amount" 
-          fill="#8884d8" 
+        <Bar
+          dataKey="amount"
+          fill="#8884d8"
           radius={[4, 4, 0, 0]}
         />
       </BarChart>
@@ -96,14 +88,14 @@ export default function MonthlySpendingChart() {
 }
 
 // Custom tooltip component
-const CustomTooltip = ({ 
-  active, 
-  payload, 
-  label 
-}: { 
-  active?: boolean; 
-  payload?: Array<{ value: number }>; 
-  label?: string 
+const CustomTooltip = ({
+  active,
+  payload,
+  label
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string
 }) => {
   if (active && payload && payload.length && payload[0].value !== undefined) {
     return (

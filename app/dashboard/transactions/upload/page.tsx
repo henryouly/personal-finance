@@ -35,7 +35,7 @@ export default function UploadTransactions() {
     return Object.values(requiredFields).every(field =>
       Object.values(fieldMappings).includes(field as TransactionField)
     ) && selectedAccountId !== '' && previewData.length > 0;
-  }, [fieldMappings, selectedAccountId, previewData]);
+  }, [fieldMappings, selectedAccountId, previewData, requiredFields]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFieldMappings({});

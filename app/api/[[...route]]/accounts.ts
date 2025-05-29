@@ -2,8 +2,6 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { db } from '@/db/db';
-import { accounts } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 // Define the router
 const app = new Hono()

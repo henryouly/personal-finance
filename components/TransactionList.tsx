@@ -46,7 +46,7 @@ export default function TransactionList({
   useEffect(() => {
     setTransactions(initialTransactions);
     updateTotalItems(initialTransactions.length);
-  }, [initialTransactions]);
+  }, [initialTransactions, updateTotalItems]);
 
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {

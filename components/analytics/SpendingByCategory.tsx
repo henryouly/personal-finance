@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { CategorySpending } from '@/types';
 import { useCategorySpending } from '@/hooks/use-category-spending';
 
 // Professional color palette
@@ -38,22 +37,20 @@ export default function SpendingByCategory() {
     }).format(value);
   };
 
-  const renderCustomizedLabel = ({ 
-    cx, 
-    cy, 
-    midAngle, 
-    innerRadius, 
-    outerRadius, 
-    percent, 
-    index 
-  }: { 
-    cx: number; 
-    cy: number; 
-    midAngle: number; 
-    innerRadius: number; 
-    outerRadius: number; 
-    percent: number; 
-    index: number;
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }: {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    percent: number;
   }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;

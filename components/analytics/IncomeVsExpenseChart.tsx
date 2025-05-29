@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useIncomeVsExpense } from '@/hooks/use-income-vs-expense';
-import { IncomeVsExpense } from '@/types';
 
 // Format month from 'YYYY-MM' to 'MMM YY' (e.g., '2023-05' -> 'May 23')
 const formatMonth = (monthStr: string) => {
@@ -80,13 +79,13 @@ export default function IncomeVsExpenseChart() {
         }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
-        <XAxis 
-          dataKey="formattedMonth" 
+        <XAxis
+          dataKey="formattedMonth"
           axisLine={false}
           tickLine={false}
           tick={{ fill: '#666', fontSize: 12 }}
         />
-        <YAxis 
+        <YAxis
           axisLine={false}
           tickLine={false}
           tick={{ fill: '#666', fontSize: 12 }}

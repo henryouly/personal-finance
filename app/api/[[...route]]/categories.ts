@@ -1,7 +1,5 @@
 import { Hono } from 'hono';
 import { db } from '@/db/db';
-import { categories } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 // Define the router
 const app = new Hono()

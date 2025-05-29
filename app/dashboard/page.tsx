@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import TransactionList from '@/components/TransactionList';
-import SpendingByCategory from '@/components/charts/SpendingByCategory';
-import MonthlySpendingChart from '@/components/charts/MonthlySpendingChart';
-import IncomeVsExpenseChart from '@/components/charts/IncomeVsExpenseChart';
+import SpendingByCategory from '@/components/analytics/SpendingByCategory';
+import MonthlySpendingChart from '@/components/analytics/MonthlySpendingChart';
+import IncomeVsExpenseChart from '@/components/analytics/IncomeVsExpenseChart';
 import BudgetOverview from '@/components/BudgetOverview';
 import AccountSummary from '@/components/AccountSummary';
 

@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { CalendarIcon, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, subDays, subMonths, startOfYear, endOfYear, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, subDays, subMonths, startOfYear, startOfMonth, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDateRange } from '@/contexts/DateRangeContext';
 
 type Preset = {
@@ -69,7 +68,6 @@ const presets: Preset[] = [
 
 export function DateRangePicker() {
   const { dateRange, setDateRange } = useDateRange();
-  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [fromMonth, setFromMonth] = useState<Date>(dateRange.from);
   const [toMonth, setToMonth] = useState<Date>(dateRange.to);
