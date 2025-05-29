@@ -46,7 +46,7 @@ export default function TransactionList({
   useEffect(() => {
     setTransactions(initialTransactions);
     updateTotalItems(initialTransactions.length);
-  }, [initialTransactions, updateTotalItems]);
+  }, [initialTransactions]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {

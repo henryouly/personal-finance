@@ -83,7 +83,6 @@ export function DateRangePicker() {
     if (preset) {
       const range = preset.getRange();
       setDateRange(range);
-      setActivePreset(presetValue);
       setFromMonth(range.from);
       setToMonth(range.to);
     }
@@ -111,7 +110,6 @@ export function DateRangePicker() {
     }
 
     setDateRange(newRange);
-    setActivePreset(null); // Clear preset when manually selecting dates
   };
 
   const isPresetActive = (presetValue: string) => {
@@ -265,7 +263,6 @@ export function DateRangePicker() {
                     from: subMonths(today, 1),
                     to: today
                   });
-                  setActivePreset(null);
                 }}
                 className="text-xs h-8"
               >
