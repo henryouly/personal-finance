@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditableCategory } from './EditableCategory';
 import { usePagination } from '@/hooks/use-pagination';
 import { useTRPC } from '@/trpc/client';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 interface TransactionListProps {
   pageSize: number;
@@ -41,6 +41,8 @@ export default function TransactionList({
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  const updateTransactionMutation = useMutation(trpc.transactions.update.mutationOptions());
+
   // Update local state when initialTransactions changes
   useEffect(() => {
     if (isLoading) return;
@@ -68,15 +70,8 @@ export default function TransactionList({
 
     try {
       const categoryId = categories?.find((cat: { name: string; id: string }) => cat.name === newCategory)?.id || null;
-      const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoryId }),
-      });
 
-      if (!response.ok) {
-        throw new Error('Failed to update category');
-      }
+      updateTransactionMutation.mutate({ id: transactionId, data: { categoryId } });
     } catch (error) {
       console.error('Failed to update category:', error);
       setTransactions(previousTransactions);

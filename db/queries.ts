@@ -88,57 +88,6 @@ export async function getBudgetByCategoryId(
   return budget;
 }
 
-// Transactions
-export async function getRecentTransactions(limit = 10): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-    limit,
-  });
-}
-
-export async function getTransactionsByAccountId(accountId: string): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    where: eq(transactions.accountId, accountId),
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-  });
-}
-
-export async function getTransactionsByCategoryId(categoryId: string): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    where: eq(transactions.categoryId, categoryId),
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-  });
-}
-
-export async function getTransactionsByDateRange(
-  startDate: Date,
-  endDate: Date
-): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    where: and(
-      gte(transactions.date, startDate),
-      lte(transactions.date, endDate)
-    ),
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-  });
-}
-
 // Analytics
 export async function getCategorySpending(
   startDate: Date,
