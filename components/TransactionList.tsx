@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EditableCategory } from './EditableCategory';
@@ -36,7 +35,7 @@ export default function TransactionList({
   const { data: categories } = useQuery(trpc.categories.list.queryOptions());
 
   // Local state for optimistic updates
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
