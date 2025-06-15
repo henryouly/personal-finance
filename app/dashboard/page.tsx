@@ -10,6 +10,7 @@ import MonthlySpendingChart from '@/components/analytics/MonthlySpendingChart';
 import IncomeVsExpenseChart from '@/components/analytics/IncomeVsExpenseChart';
 import BudgetOverview from '@/components/BudgetOverview';
 import AccountSummary from '@/components/AccountSummary';
+import { UserButton } from '@/components/auth/user-button';
 
 export default function Dashboard() {
   return (
@@ -28,6 +29,7 @@ export default function Dashboard() {
                   <a href="/dashboard/transactions/upload">Upload Transactions</a>
                 </Button>
               </div>
+              <UserButton />
             </div>
           </div>
         </div>
