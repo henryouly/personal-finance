@@ -68,20 +68,20 @@ export function UserButton() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-9 w-9 rounded-full p-0 hover:bg-accent/80 transition-colors"
+          className="relative h-9 w-9 rounded-full p-0"
           aria-label="User menu"
         >
-          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary/10 to-muted">
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-muted">
             {user.image ? (
               <Image
                 src={user.image}
                 alt={user.email}
-                width={24}
-                height={24}
-                className="h-full w-full rounded-full object-cover"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
               />
             ) : (
-              <span className="text-sm font-medium">{userInitial}</span>
+              <span className="text-sm font-medium text-foreground/80">{userInitial}</span>
             )}
           </div>
         </Button>
