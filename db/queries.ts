@@ -35,11 +35,21 @@ export async function getAllAccounts(): Promise<Account[]> {
 }
 
 export async function getAccountById(id: string): Promise<Account> {
-  const [account] = await db
-    .select()
-    .from(accounts)
-    .where(eq(accounts.id, id))
-    .limit(1);
+  const account = await db.query.accounts.findFirst({
+    where: (accounts, { eq }) => eq(accounts.id, id),
+    columns: {
+      id: true,
+      name: true,
+      balance: true,
+      type: true,
+      color: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!account) {
+    throw new Error('Account not found');
+  }
   return account;
 }
 

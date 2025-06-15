@@ -1,21 +1,23 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { useGetAccounts } from '@/hooks/use-accounts';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { CsvPreview, TransactionField, TRANSACTION_FIELDS } from '@/components/transactions/CsvPreview';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
 
 export default function UploadTransactions() {
   const router = useRouter();
+  const trpc = useTRPC();
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState('');
-  const { data: accounts, loading: accountsLoading } = useGetAccounts();
+  const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery(trpc.getAllAccounts.queryOptions());
   const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
 

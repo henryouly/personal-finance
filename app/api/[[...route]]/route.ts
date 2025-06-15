@@ -2,10 +2,8 @@ import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
 import { HTTPException } from 'hono/http-exception';
 
-import accounts from "./accounts";
 import transactions from "./transactions";
 import analytics from "./analytics";
-import categories from "./categories";
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api');
@@ -20,10 +18,8 @@ app.onError((err, c) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const routes = app
-  .route("/accounts", accounts)
   .route("/transactions", transactions)
   .route("/analytics", analytics)
-  .route("/categories", categories);
 
 export const GET = handle(app);
 export const POST = handle(app);

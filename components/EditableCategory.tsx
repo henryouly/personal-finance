@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useGetCategories } from '@/hooks/use-categories';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface EditableCategoryProps {
   category: string;
@@ -21,8 +22,9 @@ export function EditableCategory({
   onCategoryChange,
   className
 }: EditableCategoryProps) {
+  const trpc = useTRPC();
   const [selectedCategory, setSelectedCategory] = useState(category);
-  const { data: categories, loading, error } = useGetCategories();
+  const { data: categories, isLoading, error } = useQuery(trpc.getAllCategories.queryOptions());;
 
   const handleCategorySelect = (newCategory: string) => {
     setSelectedCategory(newCategory);
@@ -44,7 +46,7 @@ export function EditableCategory({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64 p-2">
-        {loading ? (
+        {isLoading ? (
           <div className="px-2 py-1.5 text-sm text-gray-500">Loading categories...</div>
         ) : error ? (
           <div className="px-2 py-1.5 text-sm text-red-500">Error loading categories</div>

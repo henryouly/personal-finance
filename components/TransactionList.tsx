@@ -5,9 +5,10 @@ import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTransactions } from '@/hooks/use-transactions';
-import { useGetCategories } from '@/hooks/use-categories';
 import { EditableCategory } from './EditableCategory';
 import { usePagination } from '@/hooks/use-pagination';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface TransactionListProps {
   pageSize: number;
@@ -16,6 +17,7 @@ interface TransactionListProps {
 export default function TransactionList({
   pageSize,
 }: TransactionListProps) {
+  const trpc = useTRPC();
   const {
     transactions: initialTransactions = [],
     isLoading,
@@ -34,7 +36,7 @@ export default function TransactionList({
   } = usePagination({ pageSize });
 
   // Get categories for the dropdown
-  const { data: categories } = useGetCategories();
+  const { data: categories } = useQuery(trpc.getAllCategories.queryOptions());
 
   // Local state for optimistic updates
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
