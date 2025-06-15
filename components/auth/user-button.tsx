@@ -16,6 +16,7 @@ import Image from 'next/image'
 
 export function UserButton() {
   const { data } = useSession()
+  const router = useRouter()
   const handleSignOut = async () => {
     await signOut({
       fetchOptions: {
@@ -29,7 +30,6 @@ export function UserButton() {
       }
     })
   }
-  const router = useRouter()
 
   if (!data) {
     return (
