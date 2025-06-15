@@ -24,7 +24,18 @@ export const analyticsRouter = createTRPCRouter({
           input.endDate ? new Date(input.endDate) : now
         );
 
-        return { data: result };
+        // Calculate total for percentage calculation
+        const total = result.reduce((sum: number, item: any) => sum + parseFloat(item.total), 0);
+
+        // Transform the data to match CategorySpending type
+        const transformedData = result.map((item: any) => ({
+          category: item.category,
+          amount: parseFloat(item.total),
+          percentage: total > 0 ? parseFloat(item.total) / total : 0,
+          color: '#4CAF50', // Default color, can be overridden by the component
+        }));
+
+        return transformedData;
       } catch (error) {
         console.error('Error fetching category spending:', error);
         throw new Error('Failed to fetch category spending');
@@ -62,7 +73,7 @@ export const analyticsRouter = createTRPCRouter({
           }
         });
 
-        return { data: Object.values(monthlyData) };
+        return Object.values(monthlyData);
       } catch (error) {
         console.error('Error fetching income vs expense data:', error);
         throw new Error('Failed to fetch income vs expense data');
@@ -86,7 +97,12 @@ export const analyticsRouter = createTRPCRouter({
           input.endDate ? new Date(input.endDate) : now
         );
 
-        return { data: result };
+        const transformedData = result.map((item: any) => ({
+          month: item.month,
+          amount: Math.abs(parseFloat(item.total)), // Convert to positive number for display
+        }));
+
+        return transformedData;
       } catch (error) {
         console.error('Error fetching monthly spending:', error);
         throw new Error('Failed to fetch monthly spending data');

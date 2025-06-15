@@ -1,48 +1,15 @@
-import { useState, useEffect } from 'react';
-import { MonthlySpending } from '@/types';
 import { useDateRange } from '@/contexts/DateRangeContext';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
 
 export function useMonthlySpending() {
   const { dateRange } = useDateRange();
   const { from: startDate, to: endDate } = dateRange;
-  const [data, setData] = useState<MonthlySpending[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const params = new URLSearchParams();
-        
-        if (startDate) params.append('startDate', startDate.toISOString());
-        if (endDate) params.append('endDate', endDate.toISOString());
-
-        const response = await fetch(`/api/analytics/monthly-spending?${params.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch monthly spending data');
-        }
-
-        const { data } = await response.json();
-        
-        // Transform the data to match MonthlySpending type
-        const transformedData = data.map((item: any) => ({
-          month: item.month,
-          amount: Math.abs(parseFloat(item.total)), // Convert to positive number for display
-        }));
-
-        setData(transformedData);
-      } catch (err) {
-        console.error('Error fetching monthly spending:', err);
-        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [startDate, endDate]);
+  const trpc = useTRPC();
+  const { data, isLoading, error } = useQuery(trpc.analytics.monthlySpending.queryOptions({
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+  }));
 
   return { data, isLoading, error };
 }

@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useIncomeVsExpense } from '@/hooks/use-income-vs-expense';
 
@@ -35,15 +34,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function IncomeVsExpenseChart() {
   const { data, isLoading, error } = useIncomeVsExpense();
 
-  // Format the data for the chart
-  const chartData = useMemo(() => {
-    return data.map(item => ({
-      ...item,
-      formattedMonth: formatMonth(item.month),
-    }));
-  }, [data]);
-
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -58,6 +49,13 @@ export default function IncomeVsExpenseChart() {
       </div>
     );
   }
+
+
+  // Format the data for the chart
+  const chartData = data.map(item => ({
+    ...item,
+    formattedMonth: formatMonth(item.month),
+  }));
 
   if (chartData.length === 0) {
     return (
