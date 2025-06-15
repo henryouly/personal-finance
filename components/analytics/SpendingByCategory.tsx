@@ -1,7 +1,9 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { useCategorySpending } from '@/hooks/use-category-spending';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
+import { useDateRange } from '@/contexts/DateRangeContext';
 
 // Professional color palette
 const COLORS = [
@@ -18,7 +20,13 @@ const COLORS = [
 ];
 
 export default function SpendingByCategory() {
-  const { data: categoryData, isLoading, error } = useCategorySpending();
+  const trpc = useTRPC();
+  const { dateRange } = useDateRange();
+  const { from: startDate, to: endDate } = dateRange;
+  const { data: categoryData, isLoading, error } = useQuery(trpc.analytics.categorySpending.queryOptions({
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+  }));
 
   if (isLoading || !categoryData) {
     return (

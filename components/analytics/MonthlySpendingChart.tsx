@@ -1,7 +1,9 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useMonthlySpending } from '@/hooks/use-monthly-spending';
+import { useTRPC } from '@/trpc/client';
+import { useDateRange } from '@/contexts/DateRangeContext';
+import { useQuery } from '@tanstack/react-query';
 
 // Format month from 'YYYY-MM' to 'MMM YY' (e.g., '2023-05' -> 'May 23')
 const formatMonth = (monthStr: string) => {
@@ -11,7 +13,13 @@ const formatMonth = (monthStr: string) => {
 };
 
 export default function MonthlySpendingChart() {
-  const { data: monthlyData, isLoading, error } = useMonthlySpending();
+  const trpc = useTRPC();
+  const { dateRange } = useDateRange();
+  const { from: startDate, to: endDate } = dateRange;
+  const { data: monthlyData, isLoading, error } = useQuery(trpc.analytics.monthlySpending.queryOptions({
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+  }));
 
   if (!monthlyData || isLoading) {
     return (
