@@ -11,11 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User } from 'lucide-react'
+import { Loader2, LogOut, User } from 'lucide-react'
 import Image from 'next/image'
 
 export function UserButton() {
-  const { data } = useSession()
+  const { data: session, isPending } = useSession()
   const router = useRouter()
   const handleSignOut = async () => {
     await signOut({
@@ -31,7 +31,23 @@ export function UserButton() {
     })
   }
 
-  if (!data) {
+  if (isPending) {
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 p-0 rounded-full"
+          disabled
+          aria-label="Loading user menu"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </Button>
+      </div>
+    )
+  }
+
+  if (!session) {
     return (
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={() => router.push('/sign-in')}>
@@ -44,14 +60,18 @@ export function UserButton() {
     )
   }
 
-  const user = data.user
+  const user = session.user
   const userInitial = user?.email?.[0]?.toUpperCase() || 'U'
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+        <Button
+          variant="ghost"
+          className="relative h-9 w-9 rounded-full p-0 hover:bg-accent/80 transition-colors"
+          aria-label="User menu"
+        >
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary/10 to-muted">
             {user.image ? (
               <Image
                 src={user.image}
