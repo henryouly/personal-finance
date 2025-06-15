@@ -17,7 +17,7 @@ export default function UploadTransactions() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState('');
-  const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery(trpc.getAllAccounts.queryOptions());
+  const { data: accounts, isLoading: accountsLoading } = useQuery(trpc.getAllAccounts.queryOptions());
   const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const uploadMutation = useMutation(trpc.transactions.upload.mutationOptions());

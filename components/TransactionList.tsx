@@ -48,7 +48,7 @@ export default function TransactionList({
     if (isLoading) return;
     setTransactions(initialTransactions);
     updateTotalItems(initialTransactions.length);
-  }, [initialTransactions, isLoading]);
+  }, [initialTransactions, isLoading]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {
