@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function AccountSummary() {
   const trpc = useTRPC();
-  const { data: accounts, isLoading, error } = useQuery(trpc.getAllAccounts.queryOptions());
+  const { data: accounts, isLoading, error } = useQuery(trpc.accounts.list.queryOptions());
 
   if (isLoading) {
     return (

@@ -1,17 +1,12 @@
-import { z } from 'zod';
-import { baseProcedure, createTRPCRouter } from '../init';
-import { getAllCategories, getAllAccounts, getIncomeVsExpense, getAccountById } from '@/db/queries';
+import { createTRPCRouter } from '../init';
 import { transactionsRouter } from './transactions-router';
 import { analyticsRouter } from './analytics-router';
+import { accountsRouter } from './accounts-router';
+import { categoriesRouter } from './categories-router';
 
 export const appRouter = createTRPCRouter({
-  getAllCategories: baseProcedure.query(getAllCategories),
-  getAllAccounts: baseProcedure.query(getAllAccounts),
-  getAccountById: baseProcedure
-    .input(z.object({
-      id: z.string().uuid(),
-    }))
-    .query(({ input }) => getAccountById(input.id)),
+  categories: categoriesRouter,
+  accounts: accountsRouter,
   transactions: transactionsRouter,
   analytics: analyticsRouter,
 });

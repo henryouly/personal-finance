@@ -24,7 +24,7 @@ export function EditableCategory({
 }: EditableCategoryProps) {
   const trpc = useTRPC();
   const [selectedCategory, setSelectedCategory] = useState(category);
-  const { data: categories, isLoading, error } = useQuery(trpc.getAllCategories.queryOptions());;
+  const { data: categories, isLoading, error } = useQuery(trpc.categories.list.queryOptions());;
 
   const handleCategorySelect = (newCategory: string) => {
     setSelectedCategory(newCategory);

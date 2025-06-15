@@ -33,7 +33,7 @@ export default function TransactionList({
   } = usePagination({ pageSize });
 
   // Get categories for the dropdown
-  const { data: categories } = useQuery(trpc.getAllCategories.queryOptions());
+  const { data: categories } = useQuery(trpc.categories.list.queryOptions());
 
   // Local state for optimistic updates
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
