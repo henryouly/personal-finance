@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { signIn, signUp } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,12 +9,12 @@ import { Loader2 } from 'lucide-react'
 
 type AuthFormProps = {
   type: 'signin' | 'signup'
+  redirectTo?: string
 }
 
-export function AuthForm({ type }: AuthFormProps) {
+export function AuthForm({ type, redirectTo = '/dashboard' }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const searchParams = useSearchParams()
   const router = useRouter()
   const isSignIn = type === 'signin'
   const buttonText = isSignIn ? 'Sign in' : 'Create account'
@@ -46,7 +46,6 @@ export function AuthForm({ type }: AuthFormProps) {
         if (error) throw error
       }
 
-      const redirectTo = searchParams.get('redirectedFrom') || '/dashboard'
       await router.push(redirectTo)
       await router.refresh()
     } catch (error: any) {
