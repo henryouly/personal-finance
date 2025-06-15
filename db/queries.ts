@@ -35,11 +35,21 @@ export async function getAllAccounts(): Promise<Account[]> {
 }
 
 export async function getAccountById(id: string): Promise<Account> {
-  const [account] = await db
-    .select()
-    .from(accounts)
-    .where(eq(accounts.id, id))
-    .limit(1);
+  const account = await db.query.accounts.findFirst({
+    where: (accounts, { eq }) => eq(accounts.id, id),
+    columns: {
+      id: true,
+      name: true,
+      balance: true,
+      type: true,
+      color: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!account) {
+    throw new Error('Account not found');
+  }
   return account;
 }
 
@@ -76,57 +86,6 @@ export async function getBudgetByCategoryId(
     )
     .limit(1);
   return budget;
-}
-
-// Transactions
-export async function getRecentTransactions(limit = 10): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-    limit,
-  });
-}
-
-export async function getTransactionsByAccountId(accountId: string): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    where: eq(transactions.accountId, accountId),
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-  });
-}
-
-export async function getTransactionsByCategoryId(categoryId: string): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    where: eq(transactions.categoryId, categoryId),
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-  });
-}
-
-export async function getTransactionsByDateRange(
-  startDate: Date,
-  endDate: Date
-): Promise<Transaction[]> {
-  return db.query.transactions.findMany({
-    with: {
-      category: true,
-      account: true,
-    },
-    where: and(
-      gte(transactions.date, startDate),
-      lte(transactions.date, endDate)
-    ),
-    orderBy: (transactions, { desc }) => [desc(transactions.date)],
-  });
 }
 
 // Analytics

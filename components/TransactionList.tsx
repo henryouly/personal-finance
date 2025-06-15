@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTransactions } from '@/hooks/use-transactions';
-import { useGetCategories } from '@/hooks/use-categories';
 import { EditableCategory } from './EditableCategory';
 import { usePagination } from '@/hooks/use-pagination';
+import { useTRPC } from '@/trpc/client';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 interface TransactionListProps {
   pageSize: number;
@@ -16,13 +15,12 @@ interface TransactionListProps {
 export default function TransactionList({
   pageSize,
 }: TransactionListProps) {
+  const trpc = useTRPC();
   const {
-    transactions: initialTransactions = [],
+    data: initialTransactions = [],
     isLoading,
     error,
-  } = useTransactions({
-    pageSize,
-  });
+  } = useQuery(trpc.transactions.list.queryOptions({}));
 
   const {
     pagination,
@@ -34,19 +32,22 @@ export default function TransactionList({
   } = usePagination({ pageSize });
 
   // Get categories for the dropdown
-  const { data: categories } = useGetCategories();
+  const { data: categories } = useQuery(trpc.categories.list.queryOptions());
 
   // Local state for optimistic updates
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  const updateTransactionMutation = useMutation(trpc.transactions.update.mutationOptions());
+
   // Update local state when initialTransactions changes
   useEffect(() => {
+    if (isLoading) return;
     setTransactions(initialTransactions);
     updateTotalItems(initialTransactions.length);
-  }, [initialTransactions]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialTransactions, isLoading]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {
@@ -68,15 +69,8 @@ export default function TransactionList({
 
     try {
       const categoryId = categories?.find((cat: { name: string; id: string }) => cat.name === newCategory)?.id || null;
-      const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoryId }),
-      });
 
-      if (!response.ok) {
-        throw new Error('Failed to update category');
-      }
+      updateTransactionMutation.mutate({ id: transactionId, data: { categoryId } });
     } catch (error) {
       console.error('Failed to update category:', error);
       setTransactions(previousTransactions);

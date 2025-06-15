@@ -30,21 +30,3 @@ export interface Budget {
   spent: number;
   period: 'monthly' | 'yearly';
 }
-
-export interface MonthlySpending {
-  month: string;
-  amount: number;
-}
-
-export interface CategorySpending {
-  category: string;
-  amount: number;
-  percentage: number;
-  color: string;
-}
-
-export interface IncomeVsExpense {
-  month: string;
-  income: number;
-  expense: number;
-}

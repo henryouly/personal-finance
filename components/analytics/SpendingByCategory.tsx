@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { useCategorySpending } from '@/hooks/use-category-spending';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
+import { useDateRange } from '@/contexts/DateRangeContext';
 
 // Professional color palette
 const COLORS = [
@@ -19,15 +20,35 @@ const COLORS = [
 ];
 
 export default function SpendingByCategory() {
-  const { data: categoryData, isLoading, error } = useCategorySpending();
+  const trpc = useTRPC();
+  const { dateRange } = useDateRange();
+  const { from: startDate, to: endDate } = dateRange;
+  const { data: categoryData, isLoading, error } = useQuery(trpc.analytics.categorySpending.queryOptions({
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+  }));
+
+  if (isLoading || !categoryData) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 text-center">
+        Error loading category spending data: {error.message}
+      </div>
+    );
+  }
 
   // Merge colors with the data
-  const dataWithColors = useMemo(() => {
-    return categoryData.map((item, index) => ({
-      ...item,
-      color: COLORS[index % COLORS.length],
-    }));
-  }, [categoryData]);
+  const dataWithColors = categoryData.map((item, index) => ({
+    ...item,
+    color: COLORS[index % COLORS.length],
+  }));
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -63,22 +84,6 @@ export default function SpendingByCategory() {
       </text>
     ) : null;
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-red-500 p-4 text-center">
-        Error loading category spending data: {error.message}
-      </div>
-    );
-  }
 
   if (dataWithColors.length === 0) {
     return (

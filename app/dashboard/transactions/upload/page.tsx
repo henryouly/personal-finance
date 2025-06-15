@@ -1,23 +1,26 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { useGetAccounts } from '@/hooks/use-accounts';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { CsvPreview, TransactionField, TRANSACTION_FIELDS } from '@/components/transactions/CsvPreview';
+import { useTRPC } from '@/trpc/client';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 export default function UploadTransactions() {
   const router = useRouter();
+  const trpc = useTRPC();
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState('');
-  const { data: accounts, loading: accountsLoading } = useGetAccounts();
+  const { data: accounts, isLoading: accountsLoading } = useQuery(trpc.accounts.list.queryOptions());
   const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const uploadMutation = useMutation(trpc.transactions.upload.mutationOptions());
 
   const handleFieldMappingChange = useCallback((header: string, field: TransactionField) => {
     setFieldMappings(prev => ({
@@ -129,20 +132,9 @@ export default function UploadTransactions() {
         accountId: tx.accountId,
         categoryId: tx.categoryId || undefined, // Send undefined instead of empty string if no category
       }));
-      // Submit to API
-      const response = await fetch('/api/transactions/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transactions: formattedTransactions }),
+      const result = await uploadMutation.mutateAsync({
+        transactions: formattedTransactions,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to import transactions');
-      }
 
       console.log('Successfully imported transactions:', result);
 
