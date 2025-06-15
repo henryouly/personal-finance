@@ -56,7 +56,17 @@ export const transactionsRouter = createTRPCRouter({
         limit: limit,
       });
 
-      return { data: allTransactions };
+      return allTransactions.map((tx: any) => ({
+        id: tx.id,
+        date: tx.date,
+        description: tx.description,
+        amount: parseFloat(tx.amount),
+        type: tx.type,
+        category: tx.category?.name || 'Uncategorized',
+        account: tx.account?.name || 'Unknown Account',
+        categoryColor: tx.category?.color,
+        accountColor: tx.account?.color,
+      }));
     }),
 
   // Upload multiple transactions

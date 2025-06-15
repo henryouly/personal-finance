@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTransactions } from '@/hooks/use-transactions';
 import { EditableCategory } from './EditableCategory';
 import { usePagination } from '@/hooks/use-pagination';
 import { useTRPC } from '@/trpc/client';
@@ -19,12 +18,10 @@ export default function TransactionList({
 }: TransactionListProps) {
   const trpc = useTRPC();
   const {
-    transactions: initialTransactions = [],
+    data: initialTransactions = [],
     isLoading,
     error,
-  } = useTransactions({
-    pageSize,
-  });
+  } = useQuery(trpc.transactions.list.queryOptions({}));
 
   const {
     pagination,
@@ -46,9 +43,10 @@ export default function TransactionList({
 
   // Update local state when initialTransactions changes
   useEffect(() => {
+    if (isLoading) return;
     setTransactions(initialTransactions);
     updateTotalItems(initialTransactions.length);
-  }, [initialTransactions]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialTransactions, isLoading]);
 
   // Handle category update
   const handleCategoryChange = async (transactionId: string, newCategory: string) => {
