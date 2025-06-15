@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
 import { client } from '@/lib/holo';
+import { useTRPC } from '@/trpc/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseTransactionsProps {
   pageSize?: number;
@@ -13,51 +15,34 @@ export function useTransactions({
   startDate,
   endDate,
 }: UseTransactionsProps = {}) {
+  const trpc = useTRPC();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, isLoading, error } = useQuery(trpc.transactions.list.queryOptions({
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+  }));
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      try {
-        setIsLoading(true);
-        const response = await client.api.transactions.$get({
-          query: {
-            startDate: startDate?.toISOString(),
-            endDate: endDate?.toISOString(),
-          },
-        });
+      if (!data || isLoading) return;
+      // Transform the API response to match the Transaction type
+      const transformedData = data.data.map((tx: any) => ({
+        id: tx.id,
+        date: tx.date,
+        description: tx.description,
+        amount: parseFloat(tx.amount),
+        type: tx.type,
+        category: tx.category?.name || 'Uncategorized',
+        account: tx.account?.name || 'Unknown Account',
+        categoryColor: tx.category?.color,
+        accountColor: tx.account?.color,
+      }));
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch transactions');
-        }
-
-        const { data } = await response.json();
-
-        // Transform the API response to match the Transaction type
-        const transformedData = data.map((tx: any) => ({
-          id: tx.id,
-          date: tx.date,
-          description: tx.description,
-          amount: parseFloat(tx.amount),
-          type: tx.type,
-          category: tx.category?.name || 'Uncategorized',
-          account: tx.account?.name || 'Unknown Account',
-          categoryColor: tx.category?.color,
-          accountColor: tx.account?.color,
-        }));
-
-        setTransactions(transformedData);
-      } catch (err) {
-        console.error('Error fetching transactions:', err);
-        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-      } finally {
-        setIsLoading(false);
-      }
+      setTransactions(transformedData);
     };
 
     fetchTransactions();
-  }, [pageSize, startDate, endDate]);
+  }, [data, pageSize]);
 
   return {
     transactions,

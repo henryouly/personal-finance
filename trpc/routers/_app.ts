@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { baseProcedure, createTRPCRouter } from '../init';
 import { getAllCategories, getAllAccounts, getIncomeVsExpense, getAccountById } from '@/db/queries';
+import { transactionsRouter } from './transactions-router';
+
 export const appRouter = createTRPCRouter({
   getAllCategories: baseProcedure.query(getAllCategories),
   getAllAccounts: baseProcedure.query(getAllAccounts),
@@ -12,6 +14,7 @@ export const appRouter = createTRPCRouter({
   getIncomeVsExpense: baseProcedure
     .input(z.object({ startDate: z.date(), endDate: z.date() }))
     .query(({ input }) => getIncomeVsExpense(input.startDate, input.endDate)),
+  transactions: transactionsRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

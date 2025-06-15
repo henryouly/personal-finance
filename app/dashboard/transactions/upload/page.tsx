@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft } from 'lucide-react';
 import { CsvPreview, TransactionField, TRANSACTION_FIELDS } from '@/components/transactions/CsvPreview';
 import { useTRPC } from '@/trpc/client';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 export default function UploadTransactions() {
   const router = useRouter();
@@ -20,6 +20,7 @@ export default function UploadTransactions() {
   const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery(trpc.getAllAccounts.queryOptions());
   const [fieldMappings, setFieldMappings] = useState<Record<string, TransactionField>>({});
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const uploadMutation = useMutation(trpc.transactions.upload.mutationOptions());
 
   const handleFieldMappingChange = useCallback((header: string, field: TransactionField) => {
     setFieldMappings(prev => ({
@@ -131,20 +132,9 @@ export default function UploadTransactions() {
         accountId: tx.accountId,
         categoryId: tx.categoryId || undefined, // Send undefined instead of empty string if no category
       }));
-      // Submit to API
-      const response = await fetch('/api/transactions/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transactions: formattedTransactions }),
+      const result = await uploadMutation.mutateAsync({
+        transactions: formattedTransactions,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to import transactions');
-      }
 
       console.log('Successfully imported transactions:', result);
 
