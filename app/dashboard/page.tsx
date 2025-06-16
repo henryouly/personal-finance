@@ -75,7 +75,7 @@ export default function Dashboard() {
 
         <TabsContent value="reports" className="space-y-6">
           <div className="flex justify-end">
-            <div className="w-48 mb-4">
+            <div className="w-52 mb-4">
               <DateRangePicker />
             </div>
           </div>
