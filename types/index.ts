@@ -16,6 +16,7 @@ export interface Category {
 }
 
 export interface Account {
+
   id: string;
   name: string;
   balance: number;
