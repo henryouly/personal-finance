@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hono/zod-validator':
-        specifier: ^0.7.0
-        version: 0.7.0(hono@4.7.11)(zod@3.25.76)
+        specifier: ^0.7.1
+        version: 0.7.1(hono@4.7.11)(zod@3.25.76)
       '@hookform/resolvers':
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.57.0(react@19.1.0))
@@ -620,11 +620,11 @@ packages:
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
 
-  '@hono/zod-validator@0.7.0':
-    resolution: {integrity: sha512-qe2ZE6sHFE98dcUrbYMtS3bAV8hqcCOflykvZga2S7XhmNSZzT+dIz4OuMILsjLHkJw9JMn912/dB7dQOmuPvg==}
+  '@hono/zod-validator@0.7.1':
+    resolution: {integrity: sha512-8+vJT1RvezAx5sN7hiZ5Mis0RMuFL77nBEcqQQgT9ufoLkxr+7ll461WlBJQcGoQSY6EGMClVae19v3s/7bbgQ==}
     peerDependencies:
       hono: '>=3.9.0'
-      zod: ^3.25.0
+      zod: ^3.25.0 || ^4.0.0
 
   '@hookform/resolvers@5.1.1':
     resolution: {integrity: sha512-J/NVING3LMAEvexJkyTLjruSm7aOFx7QX21pzkiJfMoNG0wl5aFEjLTl7ay7IQb9EWY6AkrBy7tHL2Alijpdcg==}
@@ -3988,7 +3988,7 @@ snapshots:
 
   '@hexagon/base64@1.1.28': {}
 
-  '@hono/zod-validator@0.7.0(hono@4.7.11)(zod@3.25.76)':
+  '@hono/zod-validator@0.7.1(hono@4.7.11)(zod@3.25.76)':
     dependencies:
       hono: 4.7.11
       zod: 3.25.76
