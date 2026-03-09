@@ -19,7 +19,7 @@ The Finance Prototype is a modern, full-stack web application built using Vite f
 *   **TanStack Query (React Query):** Manages server state on the frontend, providing caching, background updates, and optimistic UI updates.
 
 ### 2.3 Frontend & UI
-*   **React 19:** The UI library for building the interactive dashboard and management interfaces.
+*   **React:** The UI library for building the interactive dashboard and management interfaces.
 *   **Vite:** The build tool and development server, providing fast HMR and optimized production builds.
 *   **Tailwind CSS 4.x:** A utility-first CSS framework for rapid styling.
 *   **shadcn/ui (Radix UI):** High-quality, accessible UI components (Tabs, Dialogs, Cards, Forms).
