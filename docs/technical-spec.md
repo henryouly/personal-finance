@@ -1,7 +1,7 @@
 # Technical Specification: Finance Prototype
 
 ## 1. Architectural Overview
-The Finance Prototype is a modern, full-stack web application built using Vite for the build system and Hono for the backend framework. It leverages a type-safe architecture from the database to the UI using Drizzle ORM and tRPC.
+The Finance Prototype is a modern, full-stack web application built using pnpm for package management, Vite for the build system, and Hono for the backend framework. It leverages a type-safe architecture from the database to the UI using Drizzle ORM and tRPC.
 
 ## 2. Core Technologies
 
@@ -26,6 +26,9 @@ The Finance Prototype is a modern, full-stack web application built using Vite f
 *   **Recharts:** A composable charting library for data visualization (Spending Trends, Category Analysis).
 *   **Lucide React:** Icon library for consistent visual language.
 *   **React Hook Form & Zod:** Type-safe form management and validation.
+
+### 2.4 Tooling & Package Management
+*   **pnpm:** A fast, disk space-efficient package manager used for dependency management and running development scripts.
 
 ## 3. Database Schema Details
 The database schema includes the following primary entities:
