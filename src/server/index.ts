@@ -13,8 +13,4 @@ app.all('/trpc/*', async (c) => {
   });
 });
 
-app.get('/', (c) => {
-  return c.text('Finance Prototype API');
-});
-
 export default app;
