@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
-import { Plus, Wallet, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Wallet, MoreVertical } from 'lucide-react';
 
 export default function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);

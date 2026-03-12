@@ -19,7 +19,7 @@ import {
 import { Calendar } from 'lucide-react';
 
 export default function Reports() {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString(),
     endDate: new Date().toISOString(),
   });

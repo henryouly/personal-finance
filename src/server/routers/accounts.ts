@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
 import { accounts, journalEntries } from '../../../db/schema';
-import { eq, or, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export const accountsRouter = router({
   list: publicProcedure

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
-import { Plus, Search, Filter, Download, ArrowUpRight, ArrowDownRight, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, Download, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Transactions() {
@@ -94,9 +94,6 @@ export default function Transactions() {
             ) : transactions.data?.length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">No transactions found.</td></tr>
             ) : transactions.data?.map(tx => {
-              const mainEntry = tx.entries[1]; // Simplified
-              const isExpense = mainEntry?.amount < 0; // Depends on account type mapping
-              
               return (
                 <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-600">

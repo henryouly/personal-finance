@@ -5,7 +5,6 @@ import {
   TrendingDown, 
   Wallet, 
   ArrowUpRight, 
-  ArrowDownRight 
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -14,8 +13,6 @@ export default function Dashboard() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
     endDate: new Date().toISOString()
   });
-
-  const totalBalance = accounts.data?.reduce((acc, a) => acc + 0, 0); // Need actual balance calculation from journal entries
 
   return (
     <div className="space-y-8">

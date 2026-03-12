@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
-import { transactions, journalEntries, accounts } from '../../../db/schema';
+import { transactions, journalEntries } from '../../../db/schema';
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 import { validateTransaction } from '../../domain/accounting';
 
@@ -26,7 +26,7 @@ export const transactionsRouter = router({
       if (input?.endDate) conditions.push(lte(transactions.date, input.endDate));
       
       if (conditions.length > 0) {
-        // @ts-ignore - complex drizzle conditions
+        // @ts-expect-error - complex drizzle conditions
         query = query.where(and(...conditions));
       }
 

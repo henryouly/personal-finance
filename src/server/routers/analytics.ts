@@ -79,7 +79,7 @@ export const analyticsRouter = router({
     .input(z.object({
       months: z.number().default(6),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input: _input }) => {
       // Simplified monthly grouping
       const results = await db
         .select({

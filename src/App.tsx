@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { trpc } from './utils/trpc';
@@ -6,9 +6,7 @@ import {
   BrowserRouter as Router, 
   Routes, 
   Route, 
-  Link, 
   NavLink,
-  useLocation
 } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -18,7 +16,6 @@ import {
   Settings,
   Menu,
   X,
-  Plus
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';

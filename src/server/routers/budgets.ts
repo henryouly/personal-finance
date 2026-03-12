@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
 import { budgets, accounts, journalEntries, transactions } from '../../../db/schema';
-import { eq, and, gte, lte, sum, sql } from 'drizzle-orm';
+import { eq, and, sum, sql } from 'drizzle-orm';
 
 export const budgetsRouter = router({
   list: publicProcedure.query(async () => {
