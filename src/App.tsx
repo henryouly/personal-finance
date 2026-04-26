@@ -28,6 +28,7 @@ function cn(...inputs: ClassValue[]) {
 // Pages (to be implemented)
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
+import Categories from './pages/Categories';
 import Transactions from './pages/Transactions';
 import Budgets from './pages/Budgets';
 import Reports from './pages/Reports';
@@ -52,6 +53,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/accounts" element={<Accounts />} />
+              <Route path="/categories" element={<Categories />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/budgets" element={<Budgets />} />
               <Route path="/reports" element={<Reports />} />
@@ -69,6 +71,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Accounts', path: '/accounts', icon: Wallet },
+    { name: 'Categories', path: '/categories', icon: PieChart },
     { name: 'Transactions', path: '/transactions', icon: ArrowLeftRight },
     { name: 'Budgets', path: '/budgets', icon: Settings },
     { name: 'Reports', path: '/reports', icon: PieChart },

@@ -7,13 +7,15 @@ import { eq, sql, and, lte } from 'drizzle-orm';
 export const accountsRouter = router({
   list: publicProcedure
     .input(z.object({ 
-      classification: z.enum(['asset', 'liability', 'equity', 'income', 'expense']).optional() 
+      classification: z.enum(['asset', 'liability', 'equity', 'income', 'expense']).optional(),
+      includeInactive: z.boolean().optional().default(false),
     }).optional())
     .query(async ({ input }) => {
       const query = db.select({
         id: accounts.id,
         name: accounts.name,
         type: accounts.type,
+        parentId: accounts.parentId,
         color: accounts.color,
         icon: accounts.icon,
         isActive: accounts.isActive,
@@ -23,11 +25,21 @@ export const accountsRouter = router({
       .from(accounts)
       .leftJoin(journalEntries, eq(accounts.id, journalEntries.accountId))
       .leftJoin(transactions, eq(journalEntries.transactionId, transactions.id))
-      .groupBy(accounts.id);
+      .groupBy(accounts.id)
+      .$dynamic();
 
-      if (input?.classification) {
-        return await query.where(eq(accounts.type, input.classification));
+      const filters = [];
+      if (!input?.includeInactive) {
+        filters.push(eq(accounts.isActive, true));
       }
+      if (input?.classification) {
+        filters.push(eq(accounts.type, input.classification));
+      }
+
+      if (filters.length > 0) {
+        return await query.where(and(...filters));
+      }
+      
       return await query;
     }),
 
@@ -36,6 +48,7 @@ export const accountsRouter = router({
       id: accounts.id,
       name: accounts.name,
       type: accounts.type,
+      parentId: accounts.parentId,
       color: accounts.color,
       icon: accounts.icon,
       isActive: accounts.isActive,
@@ -93,6 +106,7 @@ export const accountsRouter = router({
     .input(z.object({
       name: z.string().min(1),
       type: z.enum(['asset', 'liability', 'equity', 'income', 'expense']),
+      parentId: z.string().optional().nullable(),
       color: z.string().optional(),
       icon: z.string().optional(),
     }))
@@ -109,20 +123,48 @@ export const accountsRouter = router({
       id: z.string(),
       name: z.string().min(1),
       type: z.enum(['asset', 'liability', 'equity', 'income', 'expense']),
+      parentId: z.string().optional().nullable(),
       color: z.string().optional(),
       icon: z.string().optional(),
+      isActive: z.boolean().optional(),
     }))
     .mutation(async ({ input }) => {
       const { id, ...data } = input;
       await db.update(accounts).set(data).where(eq(accounts.id, id));
     }),
   delete: publicProcedure.input(z.string()).mutation(async ({ input }) => {
-    // Check for existing journal entries (soft-delete logic)
-    const [entry] = await db.select().from(journalEntries).where(eq(journalEntries.accountId, input)).limit(1);
-    if (entry) {
-      await db.update(accounts).set({ isActive: false }).where(eq(accounts.id, input));
-    } else {
-      await db.delete(accounts).where(eq(accounts.id, input));
-    }
+    await db.transaction(async (tx) => {
+      // 1. Ensure "Uncategorized" system category exists
+      let [uncategorized] = await tx.select()
+        .from(accounts)
+        .where(and(eq(accounts.name, 'Uncategorized'), eq(accounts.isSystem, true)))
+        .limit(1);
+
+      if (!uncategorized) {
+        const id = crypto.randomUUID();
+        await tx.insert(accounts).values({
+          id,
+          name: 'Uncategorized',
+          type: 'expense',
+          isSystem: true,
+          color: '#94a3b8', // Slate-400
+        });
+        [uncategorized] = await tx.select().from(accounts).where(eq(accounts.id, id)).limit(1);
+      }
+
+      // 2. Update all journal entries pointing to the deleted account
+      await tx.update(journalEntries)
+        .set({ accountId: uncategorized.id })
+        .where(eq(journalEntries.accountId, input));
+
+      // 3. Reassign child categories to parent or make them top-level
+      const [deletedAccount] = await tx.select().from(accounts).where(eq(accounts.id, input)).limit(1);
+      await tx.update(accounts)
+        .set({ parentId: deletedAccount?.parentId || null })
+        .where(eq(accounts.parentId, input));
+
+      // 4. Finally delete the account
+      await tx.delete(accounts).where(eq(accounts.id, input));
+    });
   }),
 });

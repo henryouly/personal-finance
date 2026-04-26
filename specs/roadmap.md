@@ -18,7 +18,7 @@
 
 ## Phase 3: Budgeting & Categories (Planned 📅)
 - [x] Database schema for budgets.
-- [ ] Implementation of Category management UI.
+- [x] Implementation of Category management UI. ✅
 - [ ] Budget creation and tracking logic.
 - [ ] Progress visualization for category spending limits.
 - [ ] Automated categorization based on merchant history.

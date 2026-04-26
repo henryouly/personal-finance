@@ -7,6 +7,7 @@ export const accounts = sqliteTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   type: text('type', { enum: accountTypeEnum }).notNull(),
+  parentId: text('parent_id').references((): any => accounts.id),
   color: text('color'),
   icon: text('icon'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),

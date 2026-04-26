@@ -188,6 +188,15 @@ export default function Transactions() {
     tx.description.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getAccountFullName = (accountId: string): string => {
+    const account = accounts.data?.find(a => a.id === accountId);
+    if (!account) return 'Unknown';
+    if (account.parentId) {
+      return `${getAccountFullName(account.parentId)} > ${account.name}`;
+    }
+    return account.name;
+  };
+
   const totalOutOfBalance = formData.entries.reduce((acc, curr, i) => {
     const val = Math.round(parseFloat(curr.amount || '0') * 100);
     return acc + (i === 0 ? -val : val);
@@ -395,7 +404,7 @@ export default function Transactions() {
                       >
                         <option value="">{accounts.isLoading ? 'Loading accounts...' : 'Select Account'}</option>
                         {accounts.data?.filter(a => ['asset', 'liability'].includes(a.type)).map(a => (
-                          <option key={a.id} value={a.id}>{a.name}</option>
+                          <option key={a.id} value={a.id}>{getAccountFullName(a.id)}</option>
                         ))}
                       </select>
                     </div>
@@ -413,7 +422,7 @@ export default function Transactions() {
                       >
                         <option value="">{accounts.isLoading ? 'Loading categories...' : 'Select Category'}</option>
                         {accounts.data?.filter(a => ['expense', 'income', 'asset'].includes(a.type)).map(a => (
-                          <option key={a.id} value={a.id}>{a.name}</option>
+                          <option key={a.id} value={a.id}>{getAccountFullName(a.id)}</option>
                         ))}
                       </select>
                     </div>
@@ -470,7 +479,7 @@ export default function Transactions() {
                           >
                             <option value="">Select Account</option>
                             {accounts.data?.map(a => (
-                              <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
+                              <option key={a.id} value={a.id}>{getAccountFullName(a.id)} ({a.type})</option>
                             ))}
                           </select>
                         </div>
