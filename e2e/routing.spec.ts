@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { cleanupDatabase } from './utils';
 
 test.describe('SPA Routing', () => {
+  test.beforeEach(async () => {
+    await cleanupDatabase();
+  });
+
   test('should load the transactions page and remain there after refresh', async ({ page }) => {
     // Navigate to the transactions page
     await page.goto('/transactions');

@@ -29,6 +29,7 @@ export default function Transactions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [isSplitMode, setIsSplitMode] = useState(false);
   const [search, setSearch] = useState('');
   
   const transactions = trpc.transactions.list.useQuery({ accountId: accountId ?? undefined });
@@ -76,9 +77,10 @@ export default function Transactions() {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     description: '',
-    amount: '',
-    fromAccountId: '',
-    toAccountId: accountId ?? '',
+    entries: [
+      { accountId: '', amount: '' },
+      { accountId: accountId ?? '', amount: '' },
+    ]
   });
 
   const [reconcileData, setReconcileData] = useState({
@@ -89,29 +91,33 @@ export default function Transactions() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingTransaction(null);
+    setIsSplitMode(false);
   };
 
   const openModal = (tx?: Transaction) => {
     if (tx) {
       setEditingTransaction(tx);
-      const fromEntry = tx.entries.find(e => e.amount < 0);
-      const toEntry = tx.entries.find(e => e.amount > 0);
+      const isSplit = tx.entries.length > 2;
+      setIsSplitMode(isSplit);
       
       setFormData({
         date: tx.date,
         description: tx.description,
-        amount: (Math.abs(toEntry?.amount || fromEntry?.amount || 0) / 100).toString(),
-        fromAccountId: fromEntry?.accountId ?? '',
-        toAccountId: toEntry?.accountId ?? '',
+        entries: tx.entries.map(e => ({
+          accountId: e.accountId,
+          amount: (Math.abs(e.amount) / 100).toString(),
+        }))
       });
     } else {
       setEditingTransaction(null);
+      setIsSplitMode(false);
       setFormData({
         date: new Date().toISOString().split('T')[0],
         description: '',
-        amount: '',
-        fromAccountId: '',
-        toAccountId: accountId ?? '',
+        entries: [
+          { accountId: '', amount: '' },
+          { accountId: accountId ?? '', amount: '' },
+        ]
       });
     }
     setIsModalOpen(true);
@@ -119,14 +125,25 @@ export default function Transactions() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = Math.round(parseFloat(formData.amount) * 100);
+    
+    let entries;
+    if (!isSplitMode) {
+      const amount = Math.round(parseFloat(formData.entries[1].amount || formData.entries[0].amount) * 100);
+      entries = [
+        { accountId: formData.entries[0].accountId, amount: -amount },
+        { accountId: formData.entries[1].accountId, amount: amount },
+      ];
+    } else {
+      entries = formData.entries.map((entry, i) => ({
+        accountId: entry.accountId,
+        amount: Math.round(parseFloat(entry.amount) * 100) * (i === 0 ? -1 : 1)
+      }));
+    }
+
     const payload = {
       date: formData.date,
       description: formData.description,
-      entries: [
-        { accountId: formData.fromAccountId, amount: -amount },
-        { accountId: formData.toAccountId, amount: amount },
-      ]
+      entries
     };
 
     if (editingTransaction) {
@@ -170,6 +187,11 @@ export default function Transactions() {
   const filteredTransactions = transactions.data?.filter(tx => 
     tx.description.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalOutOfBalance = formData.entries.reduce((acc, curr, i) => {
+    const val = Math.round(parseFloat(curr.amount || '0') * 100);
+    return acc + (i === 0 ? -val : val);
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -250,7 +272,11 @@ export default function Transactions() {
             ) : filteredTransactions?.length === 0 ? (
               <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">No transactions found.</td></tr>
             ) : filteredTransactions?.map(tx => {
-              const displayAmount = tx.entries.find(e => e.amount > 0)?.amount || tx.entries[0].amount;
+              const positiveEntries = tx.entries.filter(e => e.amount > 0);
+              const displayAmount = positiveEntries.length > 0 
+                ? positiveEntries.reduce((acc, curr) => acc + curr.amount, 0)
+                : tx.entries[0].amount;
+                
               const isDeleting = deleteTransaction.isPending && deleteTransaction.variables === tx.id;
               const isUpdatingStatus = updateStatus.isPending && updateStatus.variables?.id === tx.id;
               
@@ -313,11 +339,21 @@ export default function Transactions() {
       {/* Modal - Transaction */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-6">
-              {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">
+                {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
+              </h2>
+              <button 
+                type="button"
+                onClick={() => setIsSplitMode(!isSplitMode)}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                {isSplitMode ? 'Simple Mode' : 'Split Transaction'}
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -330,60 +366,158 @@ export default function Transactions() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <input 
-                    type="number" 
-                    step="0.01"
-                    value={formData.amount}
-                    onChange={e => setFormData({...formData, amount: e.target.value})}
+                    type="text" 
+                    value={formData.description}
+                    onChange={e => setFormData({...formData, description: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="0.00"
+                    placeholder="e.g. Starbucks Coffee"
                     required
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <input 
-                  type="text" 
-                  value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="e.g. Starbucks Coffee"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Account</label>
-                  <select 
-                    value={formData.fromAccountId}
-                    onChange={e => setFormData({...formData, fromAccountId: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
-                  >
-                    <option value="">{accounts.isLoading ? 'Loading accounts...' : 'Select Account'}</option>
-                    {accounts.data?.filter(a => ['asset', 'liability'].includes(a.type)).map(a => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                  </select>
+
+              {!isSplitMode ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">From Account</label>
+                      <select 
+                        value={formData.entries[0].accountId}
+                        onChange={e => {
+                          const newEntries = [...formData.entries];
+                          newEntries[0].accountId = e.target.value;
+                          setFormData({ ...formData, entries: newEntries });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        required
+                      >
+                        <option value="">{accounts.isLoading ? 'Loading accounts...' : 'Select Account'}</option>
+                        {accounts.data?.filter(a => ['asset', 'liability'].includes(a.type)).map(a => (
+                          <option key={a.id} value={a.id}>{a.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">To Account / Category</label>
+                      <select 
+                        value={formData.entries[1].accountId}
+                        onChange={e => {
+                          const newEntries = [...formData.entries];
+                          newEntries[1].accountId = e.target.value;
+                          setFormData({ ...formData, entries: newEntries });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        required
+                      >
+                        <option value="">{accounts.isLoading ? 'Loading categories...' : 'Select Category'}</option>
+                        {accounts.data?.filter(a => ['expense', 'income', 'asset'].includes(a.type)).map(a => (
+                          <option key={a.id} value={a.id}>{a.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={formData.entries[1].amount || formData.entries[0].amount}
+                      onChange={e => {
+                        const newEntries = [...formData.entries];
+                        newEntries[0].amount = e.target.value;
+                        newEntries[1].amount = e.target.value;
+                        setFormData({ ...formData, entries: newEntries });
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category / To</label>
-                  <select 
-                    value={formData.toAccountId}
-                    onChange={e => setFormData({...formData, toAccountId: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
-                  >
-                    <option value="">{accounts.isLoading ? 'Loading categories...' : 'Select Category'}</option>
-                    {accounts.data?.filter(a => ['expense', 'income', 'asset'].includes(a.type)).map(a => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Entries</h3>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({
+                        ...formData,
+                        entries: [...formData.entries, { accountId: '', amount: '' }]
+                      })}
+                      className="text-sm text-blue-600 font-medium hover:underline"
+                    >
+                      + Add Row
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {formData.entries.map((entry, index) => (
+                      <div key={index} className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+                            {index === 0 ? 'Source Account' : `Split ${index}`}
+                          </label>
+                          <select 
+                            value={entry.accountId}
+                            onChange={e => {
+                              const newEntries = [...formData.entries];
+                              newEntries[index].accountId = e.target.value;
+                              setFormData({ ...formData, entries: newEntries });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            required
+                          >
+                            <option value="">Select Account</option>
+                            {accounts.data?.map(a => (
+                              <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="w-32">
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            value={entry.amount}
+                            onChange={e => {
+                              const newEntries = [...formData.entries];
+                              newEntries[index].amount = e.target.value;
+                              setFormData({ ...formData, entries: newEntries });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                        {formData.entries.length > 2 && (
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const newEntries = formData.entries.filter((_, i) => i !== index);
+                              setFormData({ ...formData, entries: newEntries });
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     ))}
-                  </select>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                    <span className="text-sm font-medium text-gray-600">Remaining Balance</span>
+                    <span className={cn(
+                      "font-bold",
+                      totalOutOfBalance === 0 ? "text-green-600" : "text-red-600"
+                    )}>
+                      {formatCurrency(totalOutOfBalance)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-4 pt-4">
+              )}
+
+              <div className="flex gap-4 pt-4 border-t border-gray-100">
                 <button 
                   type="button" 
                   onClick={closeModal}
@@ -393,8 +527,8 @@ export default function Transactions() {
                 </button>
                 <button 
                   type="submit"
-                  disabled={createTransaction.isPending || updateTransaction.isPending}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                  disabled={createTransaction.isPending || updateTransaction.isPending || (isSplitMode && totalOutOfBalance !== 0)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center font-semibold"
                 >
                   {(createTransaction.isPending || updateTransaction.isPending) && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { cleanupDatabase } from './utils';
 
 test.describe('Account Balance & Reconciliation', () => {
+  test.beforeEach(async () => {
+    await cleanupDatabase();
+  });
+
   test('should calculate balances and complete reconciliation flow', async ({ page }) => {
     // 0. Setup unique accounts for this run
     await page.goto('/accounts');

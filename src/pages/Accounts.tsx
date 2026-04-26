@@ -99,6 +99,8 @@ export default function Accounts() {
                   <option value="asset">Checking / Savings</option>
                   <option value="liability">Credit Card / Loan</option>
                   <option value="equity">Investment</option>
+                  <option value="income">Income Source</option>
+                  <option value="expense">Expense Category</option>
                 </select>
               </div>
               <div>
