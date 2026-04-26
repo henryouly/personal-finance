@@ -1,11 +1,29 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
-import { Plus, Search, Filter, Download, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, Download, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+
+interface JournalEntry {
+  id: string;
+  transactionId: string;
+  accountId: string;
+  amount: number;
+  memo: string | null;
+}
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  status: string | null;
+  source: string | null;
+  entries: JournalEntry[];
+}
 
 export default function Transactions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [search, setSearch] = useState('');
   
   const transactions = trpc.transactions.list.useQuery();
@@ -14,7 +32,20 @@ export default function Transactions() {
   const createTransaction = trpc.transactions.create.useMutation({
     onSuccess: () => {
       transactions.refetch();
-      setIsModalOpen(false);
+      closeModal();
+    }
+  });
+
+  const updateTransaction = trpc.transactions.update.useMutation({
+    onSuccess: () => {
+      transactions.refetch();
+      closeModal();
+    }
+  });
+
+  const deleteTransaction = trpc.transactions.delete.useMutation({
+    onSuccess: () => {
+      transactions.refetch();
     }
   });
 
@@ -26,17 +57,64 @@ export default function Transactions() {
     toAccountId: '',
   });
 
+  const openModal = (tx?: Transaction) => {
+    if (tx) {
+      setEditingTransaction(tx);
+      const fromEntry = tx.entries.find(e => e.amount < 0);
+      const toEntry = tx.entries.find(e => e.amount > 0);
+      
+      setFormData({
+        date: tx.date,
+        description: tx.description,
+        amount: (Math.abs(toEntry?.amount || fromEntry?.amount || 0) / 100).toString(),
+        fromAccountId: fromEntry?.accountId || '',
+        toAccountId: toEntry?.accountId || '',
+      });
+    } else {
+      setEditingTransaction(null);
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+        amount: '',
+        fromAccountId: '',
+        toAccountId: '',
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingTransaction(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = parseInt(formData.amount) * 100;
-    createTransaction.mutate({
+    const amount = Math.round(parseFloat(formData.amount) * 100);
+    const payload = {
       date: formData.date,
       description: formData.description,
       entries: [
         { accountId: formData.fromAccountId, amount: -amount },
         { accountId: formData.toAccountId, amount: amount },
       ]
-    });
+    };
+
+    if (editingTransaction) {
+      updateTransaction.mutate({
+        id: editingTransaction.id,
+        ...payload
+      });
+    } else {
+      createTransaction.mutate(payload);
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      deleteTransaction.mutate(id);
+    }
   };
 
   return (
@@ -49,7 +127,7 @@ export default function Transactions() {
             Import CSV
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => openModal()}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-5 h-5 mr-2" />
@@ -94,10 +172,17 @@ export default function Transactions() {
             ) : transactions.data?.length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">No transactions found.</td></tr>
             ) : transactions.data?.map(tx => {
+              const displayAmount = tx.entries.find(e => e.amount > 0)?.amount || tx.entries[0].amount;
+              const isDeleting = deleteTransaction.isPending && deleteTransaction.variables === tx.id;
+              
               return (
-                <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
+                <tr 
+                  key={tx.id} 
+                  onClick={() => openModal(tx)}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer group"
+                >
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {format(new Date(tx.date), 'MMM dd, yyyy')}
+                    {format(new Date(tx.date + 'T00:00:00'), 'MMM dd, yyyy')}
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-sm font-medium text-gray-900">{tx.description}</p>
@@ -108,13 +193,17 @@ export default function Transactions() {
                   </td>
                   <td className={cn(
                     "px-6 py-4 text-sm font-semibold text-right",
-                    tx.entries[0].amount < 0 ? 'text-red-600' : 'text-green-600'
+                    displayAmount < 0 ? 'text-red-600' : 'text-green-600'
                   )}>
-                    {formatCurrency(Math.abs(tx.entries[0].amount))}
+                    {formatCurrency(Math.abs(displayAmount))}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                      <Trash2 className="w-4 h-4" />
+                    <button 
+                      onClick={(e) => handleDelete(e, tx.id)}
+                      disabled={isDeleting}
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </button>
                   </td>
                 </tr>
@@ -124,11 +213,13 @@ export default function Transactions() {
         </table>
       </div>
 
-      {/* Modal - Simplified */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-6">New Transaction</h2>
+            <h2 className="text-xl font-bold mb-6">
+              {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -198,16 +289,20 @@ export default function Transactions() {
               <div className="flex gap-4 pt-4">
                 <button 
                   type="button" 
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={createTransaction.isPending || updateTransaction.isPending}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
-                  Save Transaction
+                  {(createTransaction.isPending || updateTransaction.isPending) && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  {editingTransaction ? 'Update Transaction' : 'Save Transaction'}
                 </button>
               </div>
             </form>

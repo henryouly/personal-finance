@@ -11,7 +11,7 @@
 - [x] Account creation and listing UI.
 - [x] Manual transaction entry with dual-account selection.
 - [x] Transaction list view with basic filtering.
-- [ ] **Next:** Refine transaction editing and deletion workflows.
+- [x] Refine transaction editing and deletion workflows. ✅
 - [ ] **Next:** Implement account balance calculation logic (reconciliation).
 - [ ] **Next:** Add support for multiple entries per transaction (split transactions).
 

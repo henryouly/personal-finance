@@ -81,4 +81,43 @@ export const transactionsRouter = router({
   delete: publicProcedure.input(z.string()).mutation(async ({ input }) => {
     await db.delete(transactions).where(eq(transactions.id, input));
   }),
+
+  update: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      date: z.string(),
+      description: z.string(),
+      entries: z.array(z.object({
+        accountId: z.string(),
+        amount: z.number().int(), // Cents
+      })).min(2),
+    }))
+    .mutation(async ({ input }) => {
+      validateTransaction(input.entries);
+      
+      await db.transaction(async (tx) => {
+        // Update transaction header
+        await tx.update(transactions)
+          .set({
+            date: input.date,
+            description: input.description,
+          })
+          .where(eq(transactions.id, input.id));
+
+        // Replace journal entries
+        // Delete old ones
+        await tx.delete(journalEntries).where(eq(journalEntries.transactionId, input.id));
+
+        // Insert new ones
+        for (const entry of input.entries) {
+          await tx.insert(journalEntries).values({
+            id: crypto.randomUUID(),
+            transactionId: input.id,
+            accountId: entry.accountId,
+            amount: entry.amount,
+          });
+        }
+      });
+      return input.id;
+    }),
 });
