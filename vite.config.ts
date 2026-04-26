@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     devServer({
       entry: 'src/server/index.ts',
-      exclude: [/^\/(assets|src|public)\/.+/, /^\/@.+/, /^\/node_modules\/.+/, /^\/$/],
+      exclude: [/^\/(assets|src|public)\/.+/, /^\/@.+/, /^\/node_modules\/.+/, /^(?!\/trpc).*$/],
       injectClientScript: true,
     }),
   ],
