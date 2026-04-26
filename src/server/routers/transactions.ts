@@ -120,4 +120,15 @@ export const transactionsRouter = router({
       });
       return input.id;
     }),
+
+  updateStatus: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      status: z.enum(['pending', 'cleared', 'reconciled']),
+    }))
+    .mutation(async ({ input }) => {
+      await db.update(transactions)
+        .set({ status: input.status })
+        .where(eq(transactions.id, input.id));
+    }),
 });

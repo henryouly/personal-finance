@@ -13,7 +13,7 @@
 - [x] Transaction list view with basic filtering.
 - [x] Refine transaction editing and deletion workflows. ✅
 - [x] Fix SPA routing 404 on page refresh. ✅
-- [ ] **Next:** Implement account balance calculation logic (reconciliation).
+- [x] Implement account balance calculation logic (reconciliation). ✅
 - [ ] **Next:** Add support for multiple entries per transaction (split transactions).
 
 ## Phase 3: Budgeting & Categories (Planned 📅)

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
-import { accounts, journalEntries } from '../../../db/schema';
-import { eq } from 'drizzle-orm';
+import { accounts, journalEntries, transactions } from '../../../db/schema';
+import { eq, sql, and, lte } from 'drizzle-orm';
 
 export const accountsRouter = router({
   list: publicProcedure
@@ -10,15 +10,85 @@ export const accountsRouter = router({
       classification: z.enum(['asset', 'liability', 'equity', 'income', 'expense']).optional() 
     }).optional())
     .query(async ({ input }) => {
+      const query = db.select({
+        id: accounts.id,
+        name: accounts.name,
+        type: accounts.type,
+        color: accounts.color,
+        icon: accounts.icon,
+        isActive: accounts.isActive,
+        totalBalance: sql<number>`COALESCE(SUM(${journalEntries.amount}), 0)`,
+        clearedBalance: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.status} IN ('cleared', 'reconciled') THEN ${journalEntries.amount} ELSE 0 END), 0)`,
+      })
+      .from(accounts)
+      .leftJoin(journalEntries, eq(accounts.id, journalEntries.accountId))
+      .leftJoin(transactions, eq(journalEntries.transactionId, transactions.id))
+      .groupBy(accounts.id);
+
       if (input?.classification) {
-        return await db.select().from(accounts).where(eq(accounts.type, input.classification));
+        return await query.where(eq(accounts.type, input.classification));
       }
-      return await db.select().from(accounts);
+      return await query;
     }),
+
   get: publicProcedure.input(z.string()).query(async ({ input }) => {
-    const [account] = await db.select().from(accounts).where(eq(accounts.id, input));
-    return account;
+    const [result] = await db.select({
+      id: accounts.id,
+      name: accounts.name,
+      type: accounts.type,
+      color: accounts.color,
+      icon: accounts.icon,
+      isActive: accounts.isActive,
+      totalBalance: sql<number>`COALESCE(SUM(${journalEntries.amount}), 0)`,
+      clearedBalance: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.status} IN ('cleared', 'reconciled') THEN ${journalEntries.amount} ELSE 0 END), 0)`,
+    })
+    .from(accounts)
+    .leftJoin(journalEntries, eq(accounts.id, journalEntries.accountId))
+    .leftJoin(transactions, eq(journalEntries.transactionId, transactions.id))
+    .where(eq(accounts.id, input))
+    .groupBy(accounts.id);
+    
+    return result;
   }),
+
+  reconcile: publicProcedure
+    .input(z.object({
+      accountId: z.string(),
+      statementDate: z.string(), // ISO date
+      statementBalance: z.number().int(), // cents
+    }))
+    .mutation(async ({ input }) => {
+      await db.transaction(async (tx) => {
+        // 1. Calculate cleared balance as of statement date
+        const [res] = await tx.select({
+          clearedBalance: sql<number>`COALESCE(SUM(${journalEntries.amount}), 0)`,
+        })
+        .from(journalEntries)
+        .innerJoin(transactions, eq(journalEntries.transactionId, transactions.id))
+        .where(and(
+          eq(journalEntries.accountId, input.accountId),
+          lte(transactions.date, input.statementDate),
+          sql`${transactions.status} IN ('cleared', 'reconciled')`
+        ));
+
+        if (res.clearedBalance !== input.statementBalance) {
+          throw new Error(`Reconciliation failed: Variance of ${(res.clearedBalance - input.statementBalance) / 100}`);
+        }
+
+        // 2. Mark all 'cleared' transactions as 'reconciled'
+        await tx.update(transactions)
+          .set({ status: 'reconciled' })
+          .where(and(
+            eq(transactions.status, 'cleared'),
+            lte(transactions.date, input.statementDate),
+            sql`EXISTS (
+              SELECT 1 FROM ${journalEntries} 
+              WHERE ${journalEntries.transactionId} = ${transactions.id} 
+              AND ${journalEntries.accountId} = ${input.accountId}
+            )`
+          ));
+      });
+    }),
   create: publicProcedure
     .input(z.object({
       name: z.string().min(1),

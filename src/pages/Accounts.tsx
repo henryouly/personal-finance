@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
-import { Plus, Wallet, MoreVertical } from 'lucide-react';
+import { Plus, Wallet, MoreVertical, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,22 +42,31 @@ export default function Accounts() {
         {accounts.isLoading ? (
           <p>Loading...</p>
         ) : accounts.data?.map(account => (
-          <div key={account.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-            <div>
+          <div key={account.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:border-blue-200 transition-colors group">
+            <Link to={`/transactions?accountId=${account.id}`} className="flex-1">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-gray-50" style={{ color: account.color || '#3b82f6' }}>
+                <div className="p-3 rounded-lg bg-gray-50 group-hover:bg-blue-50 transition-colors" style={{ color: account.color || '#3b82f6' }}>
                   <Wallet className="w-6 h-6" />
                 </div>
-                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" title="Cleared balance matches current" />
+                  <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
               <h3 className="text-lg font-bold text-gray-900">{account.name}</h3>
               <p className="text-sm text-gray-500 capitalize">{account.type}</p>
-            </div>
-            <div className="mt-6">
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(0)}</p>
-              <p className="text-xs text-gray-400 mt-1">Current Balance</p>
+            </Link>
+            <div className="mt-6 pt-4 border-t border-gray-50 flex justify-between items-end">
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(account.totalBalance || 0)}</p>
+                <p className="text-xs text-gray-400 mt-1">Current Balance</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-gray-600">{formatCurrency(account.clearedBalance || 0)}</p>
+                <p className="text-[10px] text-gray-400">Cleared</p>
+              </div>
             </div>
           </div>
         ))}
