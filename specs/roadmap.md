@@ -20,7 +20,7 @@
 - [x] Database schema for budgets.
 - [x] Implementation of Category management UI. ✅
 - [x] Budget creation and tracking logic. ✅
-- [ ] Progress visualization for category spending limits.
+- [x] Progress visualization for category spending limits. ✅
 - [ ] Automated categorization based on merchant history.
 
 ## Phase 4: Analytics & Reporting (Planned 📅)

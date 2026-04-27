@@ -5,6 +5,8 @@ import { Plus, Target, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RouterOutputs } from '../utils/trpc';
 import { useSearchParams } from 'react-router-dom';
+import { BudgetProgress } from '../components/BudgetProgress';
+import { cn } from '../utils/ui';
 
 type AppBudget = RouterOutputs['budgets']['list'][number];
 
@@ -134,11 +136,7 @@ export default function Budgets() {
             <p className="text-lg font-medium">No budgets set yet</p>
             <p className="text-sm">Stay on top of your spending by setting category limits.</p>
           </div>
-        ) : budgets.data?.map(budget => {
-          const percentage = Math.min((budget.currentSpent / budget.limitAmount) * 100, 100);
-          const isOver = budget.currentSpent > budget.limitAmount;
-          
-          return (
+        ) : budgets.data?.map(budget => (
             <div key={budget.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 group">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -165,36 +163,23 @@ export default function Budgets() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  {isOver && <AlertCircle className="w-6 h-6 text-red-500" />}
+                  {budget.currentSpent > budget.limitAmount && <AlertCircle className="w-6 h-6 text-red-500" />}
                 </div>
               </div>
               
               <div className="space-y-2">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">{formatCurrency(budget.currentSpent)} spent</span>
-                  <span className="text-gray-500">of {formatCurrency(budget.limitAmount)}</span>
-                </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full transition-all duration-500",
-                      isOver ? 'bg-red-500' : percentage > 80 ? 'bg-yellow-500' : 'bg-green-500'
-                    )}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-                <div className="flex justify-between items-center">
+                <BudgetProgress 
+                  currentSpent={budget.currentSpent} 
+                  limitAmount={budget.limitAmount} 
+                />
+                <div className="flex justify-start">
                   <p className="text-xs text-gray-400">
                     Tracked since: {new Date(budget.startDate + 'T00:00:00').toLocaleDateString()}
-                  </p>
-                  <p className="text-right text-xs text-gray-400">
-                    {isOver ? 'Over budget' : `${(100 - percentage).toFixed(0)}% remaining`}
                   </p>
                 </div>
               </div>
             </div>
-          );
-        })}
+          ))}
       </div>
 
       {/* Modal */}
@@ -299,8 +284,4 @@ export default function Budgets() {
       )}
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

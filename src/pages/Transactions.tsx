@@ -4,6 +4,7 @@ import { formatCurrency } from '../domain/accounting';
 import { Plus, Search, Filter, Download, Trash2, Loader2, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
+import { cn } from '../utils/ui';
 
 interface JournalEntry {
   id: string;
@@ -627,8 +628,4 @@ export default function Transactions() {
       )}
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

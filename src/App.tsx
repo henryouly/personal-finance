@@ -17,13 +17,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-// UI Helpers
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from './utils/ui';
 
 // Pages (to be implemented)
 import Dashboard from './pages/Dashboard';

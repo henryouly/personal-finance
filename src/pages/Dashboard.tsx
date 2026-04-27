@@ -6,10 +6,17 @@ import {
   TrendingDown, 
   Wallet, 
   ArrowUpRight, 
+  Plus,
+  Target,
+  ChevronRight,
 } from 'lucide-react';
+import { BudgetProgress } from '../components/BudgetProgress';
+import { Link } from 'react-router-dom';
+import { cn } from '../utils/ui';
 
 export default function Dashboard() {
   const accounts = trpc.accounts.list.useQuery({ classification: 'asset' });
+  const budgets = trpc.budgets.list.useQuery();
   const ivsE = trpc.analytics.incomeVsExpense.useQuery({
     startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
     endDate: format(new Date(), 'yyyy-MM-dd')
@@ -26,7 +33,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card 
           title="Total Balance" 
-          amount={formatCurrency(0)} // Placeholder
+          amount={formatCurrency(accounts.data?.reduce((acc, a) => acc + a.totalBalance, 0) || 0)}
           icon={Wallet}
           color="blue"
         />
@@ -35,28 +42,34 @@ export default function Dashboard() {
           amount={formatCurrency(ivsE.data?.income || 0)} 
           icon={TrendingUp}
           color="green"
-          subtext="+12% from last month"
         />
         <Card 
           title="Monthly Expenses" 
           amount={formatCurrency(ivsE.data?.expense || 0)} 
           icon={TrendingDown}
           color="red"
-          subtext="-5% from last month"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Accounts */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold mb-4 flex items-center">
-            <Wallet className="w-5 h-5 mr-2 text-blue-500" />
-            Your Accounts
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center">
+              <Wallet className="w-5 h-5 mr-2 text-blue-500" />
+              Your Accounts
+            </h2>
+            <Link to="/accounts" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center">
+              View All
+              <ChevronRight className="w-4 h-4 ml-0.5" />
+            </Link>
+          </div>
           <div className="space-y-4">
             {accounts.isLoading ? (
-              <p>Loading...</p>
-            ) : accounts.data?.map(account => (
+              <p className="text-center py-4 text-gray-500">Loading...</p>
+            ) : accounts.data?.length === 0 ? (
+              <p className="text-center py-4 text-gray-500">No accounts found.</p>
+            ) : accounts.data?.slice(0, 5).map(account => (
               <div key={account.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
                 <div className="flex items-center">
                   <div className="w-2 h-8 rounded-full mr-3" style={{ backgroundColor: account.color || '#3b82f6' }} />
@@ -65,9 +78,50 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-500 uppercase">{account.type}</p>
                   </div>
                 </div>
-                <p className="font-semibold text-gray-900">{formatCurrency(0)}</p>
+                <p className="font-semibold text-gray-900">{formatCurrency(account.totalBalance)}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Budget Overview */}
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center">
+              <Target className="w-5 h-5 mr-2 text-red-500" />
+              Budget Progress
+            </h2>
+            <Link to="/budgets" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center">
+              View All
+              <ChevronRight className="w-4 h-4 ml-0.5" />
+            </Link>
+          </div>
+          <div className="space-y-6">
+            {budgets.isLoading ? (
+              <p className="text-center py-4 text-gray-500">Loading...</p>
+            ) : budgets.data?.length === 0 ? (
+              <div className="text-center py-8">
+                <Target className="w-10 h-10 mx-auto mb-2 text-gray-200" />
+                <p className="text-sm text-gray-500">No budgets set yet.</p>
+                <Link to="/budgets" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                  Set a budget
+                </Link>
+              </div>
+            ) : (
+              budgets.data?.sort((a, b) => (b.currentSpent / b.limitAmount) - (a.currentSpent / a.limitAmount)).slice(0, 4).map(budget => (
+                <Link key={budget.id} to="/budgets" className="block p-1 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-gray-700">{budget.accountName}</span>
+                    <span className="text-xs text-gray-400 capitalize">{budget.period}</span>
+                  </div>
+                  <BudgetProgress 
+                    currentSpent={budget.currentSpent} 
+                    limitAmount={budget.limitAmount} 
+                    compact 
+                  />
+                </Link>
+              ))
+            )}
           </div>
         </section>
 
@@ -75,10 +129,10 @@ export default function Dashboard() {
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex flex-col items-center justify-center p-4 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors">
+            <Link to="/transactions" className="flex flex-col items-center justify-center p-4 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors">
               <Plus className="w-6 h-6 mb-2" />
               <span className="text-sm font-medium">Add Transaction</span>
-            </button>
+            </Link>
             <button className="flex flex-col items-center justify-center p-4 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors">
               <ArrowUpRight className="w-6 h-6 mb-2" />
               <span className="text-sm font-medium">Import CSV</span>
@@ -88,12 +142,6 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
-
-function Plus({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-  )
 }
 
 function Card({ title, amount, icon: Icon, color, subtext }: { 
@@ -132,6 +180,3 @@ function Card({ title, amount, icon: Icon, color, subtext }: {
   );
 }
 
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
-}
