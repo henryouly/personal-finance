@@ -27,7 +27,7 @@ To ensure data integrity, the system uses a double-entry model. Every `Transacti
 - **Liability/Income Accounts:** Credit increases balance (+), Debit decreases (-).
 
 ### 2.2 Integer Cent Precision
-All monetary values are stored and calculated as **Integers** representing cents (e.g., $10.50 is stored as `1050`). This completely avoids floating-point rounding errors (e.g., `0.1 + 0.2 !== 0.3`).
+All monetary values are stored and calculated as **Integers** representing cents (e.g., $10.50 is stored as `1050`). This completely avoids floating-point rounding errors.
 
 ### 2.3 Local-First Portability
 By using SQLite/libSQL, the application is zero-config for developers and can be easily backed up or migrated. The architecture is designed to eventually support syncing to a remote Turso database.
@@ -35,17 +35,32 @@ By using SQLite/libSQL, the application is zero-config for developers and can be
 ### 2.4 End-to-End Type Safety
 The use of tRPC ensures that changes in the database schema or backend logic are immediately caught by the TypeScript compiler in the frontend, preventing runtime API mismatches.
 
+### 2.5 Local Date Handling
+To avoid timezone-related "off-by-one-day" errors, the system stores and processes dates as **Local ISO Strings** (`YYYY-MM-DD`). All period-based calculations (Monthly/Yearly) use SQL `strftime` on these local strings, and the frontend employs `date-fns` for consistent local formatting.
+
 ## 3. Database Schema Overview
 
 ### 3.1 Core Entities
 - `accounts`: Stores real bank accounts and virtual categories (Nominal accounts).
 - `transactions`: Header information for financial events (Date, Description).
 - `journal_entries`: The actual movement of value between accounts.
-- `budgets`: Spending limits tied to specific `expense` type accounts.
+- `budgets`: Stores spending limits for `expense` accounts with support for `monthly` and `yearly` periods. Includes a `start_date` to filter out transactions occurring before the budget's inception.
 
 ### 3.2 Deduplication Strategy
 Transactions include an `external_id` (a hash of date, amount, and description) to prevent duplicate records during CSV imports.
 
-## 4. Testing & Validation
+## 4. UI & Visualization Standards
+
+### 4.1 Shared Styling Utility
+A centralized `cn` helper (combining `clsx` and `tailwind-merge`) in `src/utils/ui.ts` is the standard for conditional Tailwind styling across all components.
+
+### 4.2 Budget Progress Thresholds
+To ensure consistent feedback, budget visualizations must follow these color-coded thresholds:
+- **Green:** < 80% of limit spent.
+- **Yellow:** 80% – 100% of limit spent.
+- **Red:** > 100% of limit (Over budget).
+
+## 5. Testing & Validation
 - **Domain Logic:** Mathematical validation of transactions (zero-sum) is encapsulated in a domain layer, tested with Vitest.
 - **Form Validation:** All inputs are validated via **Zod** schemas shared between the frontend and the tRPC router.
+- **E2E Testing:** **Playwright** is used for full-flow validation, specifically verifying that actions in one domain (e.g., adding a Transaction) correctly propagate to others (e.g., updating a Budget progress bar on the Dashboard).
