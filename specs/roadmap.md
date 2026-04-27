@@ -16,10 +16,10 @@
 - [x] Implement account balance calculation logic (reconciliation). ✅
 - [x] Add support for multiple entries per transaction (split transactions). ✅
 
-## Phase 3: Budgeting & Categories (Planned 📅)
+## Phase 3: Budgeting & Categories (In Progress 🚧)
 - [x] Database schema for budgets.
 - [x] Implementation of Category management UI. ✅
-- [ ] Budget creation and tracking logic.
+- [ ] Budget creation and tracking logic. 🚧
 - [ ] Progress visualization for category spending limits.
 - [ ] Automated categorization based on merchant history.
 

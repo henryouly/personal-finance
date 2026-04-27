@@ -1,33 +1,94 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
-import { Plus, Target, AlertCircle } from 'lucide-react';
+import { Plus, Target, AlertCircle, Pencil, Trash2 } from 'lucide-react';
+import { RouterOutputs } from '../utils/trpc';
+
+type AppBudget = RouterOutputs['budgets']['list'][number];
+
+interface BudgetFormData {
+  accountId: string;
+  limitAmount: string;
+  period: 'monthly' | 'yearly';
+}
 
 export default function Budgets() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBudget, setEditingBudget] = useState<AppBudget | null>(null);
   const budgets = trpc.budgets.list.useQuery();
   const accounts = trpc.accounts.list.useQuery({ classification: 'expense' });
   
+  const utils = trpc.useContext();
+
+  const [formData, setFormData] = useState<BudgetFormData>({
+    accountId: '',
+    limitAmount: '',
+    period: 'monthly',
+  });
+
   const createBudget = trpc.budgets.create.useMutation({
     onSuccess: () => {
-      budgets.refetch();
-      setIsModalOpen(false);
+      utils.budgets.list.invalidate();
+      closeModal();
+    },
+    onError: (error) => {
+      alert(error.message);
     }
   });
 
-  const [formData, setFormData] = useState({
-    accountId: '',
-    limitAmount: '',
-    period: 'monthly' as const,
+  const updateBudget = trpc.budgets.update.useMutation({
+    onSuccess: () => {
+      utils.budgets.list.invalidate();
+      closeModal();
+    }
   });
+
+  const deleteBudget = trpc.budgets.delete.useMutation({
+    onSuccess: () => {
+      utils.budgets.list.invalidate();
+    }
+  });
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingBudget(null);
+    setFormData({
+      accountId: '',
+      limitAmount: '',
+      period: 'monthly',
+    });
+  };
+
+  const handleEdit = (budget: AppBudget) => {
+    setEditingBudget(budget);
+    setFormData({
+      accountId: budget.accountId,
+      limitAmount: (budget.limitAmount / 100).toString(),
+      period: budget.period,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this budget?')) {
+      deleteBudget.mutate(id);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createBudget.mutate({
-      ...formData,
-      limitAmount: parseInt(formData.limitAmount) * 100,
-      startDate: new Date().toISOString(),
-    });
+    if (editingBudget) {
+      updateBudget.mutate({
+        id: editingBudget.id,
+        limitAmount: Math.round(parseFloat(formData.limitAmount) * 100),
+      });
+    } else {
+      createBudget.mutate({
+        ...formData,
+        limitAmount: Math.round(parseFloat(formData.limitAmount) * 100),
+        startDate: new Date().toISOString(),
+      });
+    }
   };
 
   return (
@@ -57,13 +118,29 @@ export default function Budgets() {
           const isOver = budget.currentSpent > budget.limitAmount;
           
           return (
-            <div key={budget.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div key={budget.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 group">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{budget.accountName}</h3>
                   <p className="text-sm text-gray-500 capitalize">{budget.period} limit</p>
                 </div>
-                {isOver && <AlertCircle className="w-6 h-6 text-red-500" />}
+                <div className="flex items-center gap-2">
+                  <div className="hidden group-hover:flex items-center gap-2 mr-2">
+                    <button 
+                      onClick={() => handleEdit(budget)}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(budget.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {isOver && <AlertCircle className="w-6 h-6 text-red-500" />}
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -80,28 +157,37 @@ export default function Budgets() {
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <p className="text-right text-xs text-gray-400">
-                  {isOver ? 'Over budget' : `${(100 - percentage).toFixed(0)}% remaining`}
-                </p>
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-400">
+                    Starts: {new Date(budget.startDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-right text-xs text-gray-400">
+                    {isOver ? 'Over budget' : `${(100 - percentage).toFixed(0)}% remaining`}
+                  </p>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Modal - Simplified */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-6">Set Category Budget</h2>
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold mb-6">
+              {editingBudget ? 'Edit Budget' : 'Set Category Budget'}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <select 
+                  id="category"
                   value={formData.accountId}
                   onChange={e => setFormData({...formData, accountId: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-50 disabled:text-gray-500"
                   required
+                  disabled={!!editingBudget}
                 >
                   <option value="">Select Category</option>
                   {accounts.data?.map(a => (
@@ -110,9 +196,11 @@ export default function Budgets() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Limit Amount ($)</label>
+                <label htmlFor="limitAmount" className="block text-sm font-medium text-gray-700 mb-1">Limit Amount ($)</label>
                 <input 
+                  id="limitAmount"
                   type="number" 
+                  step="0.01"
                   value={formData.limitAmount}
                   onChange={e => setFormData({...formData, limitAmount: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -125,20 +213,24 @@ export default function Budgets() {
                 <div className="grid grid-cols-2 gap-2">
                   <button 
                     type="button"
+                    disabled={!!editingBudget}
                     onClick={() => setFormData({...formData, period: 'monthly'})}
                     className={cn(
                       "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
-                      formData.period === 'monthly' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600'
+                      formData.period === 'monthly' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600',
+                      editingBudget && formData.period !== 'monthly' && "opacity-50"
                     )}
                   >
                     Monthly
                   </button>
                   <button 
                     type="button"
+                    disabled={!!editingBudget}
                     onClick={() => setFormData({...formData, period: 'yearly'})}
                     className={cn(
                       "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
-                      formData.period === 'yearly' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600'
+                      formData.period === 'yearly' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600',
+                      editingBudget && formData.period !== 'yearly' && "opacity-50"
                     )}
                   >
                     Yearly
@@ -148,7 +240,7 @@ export default function Budgets() {
               <div className="flex gap-4 pt-4">
                 <button 
                   type="button" 
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
@@ -157,7 +249,7 @@ export default function Budgets() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Set Budget
+                  {editingBudget ? 'Update' : 'Set Budget'}
                 </button>
               </div>
             </form>

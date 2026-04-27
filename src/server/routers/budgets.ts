@@ -6,6 +6,10 @@ import { eq, and, sum, sql } from 'drizzle-orm';
 
 export const budgetsRouter = router({
   list: publicProcedure.query(async () => {
+    const now = new Date();
+    const currentMonth = now.toISOString().substring(0, 7); // YYYY-MM
+    const currentYear = now.toISOString().substring(0, 4); // YYYY
+
     const results = await db
       .select({
         id: budgets.id,
@@ -18,10 +22,13 @@ export const budgetsRouter = router({
       .from(budgets)
       .innerJoin(accounts, eq(budgets.accountId, accounts.id));
     
-    // For each budget, calculate current spending
+    // We still need to respect the budget-specific startDate and period, 
+    // so we'll do the final aggregation per budget.
     const budgetsWithProgress = await Promise.all(results.map(async (b) => {
-      // Assuming monthly for now (current month)
-      const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+      const dateFilter = b.period === 'monthly' 
+        ? sql`strftime('%Y-%m', ${transactions.date}) = ${currentMonth}`
+        : sql`strftime('%Y', ${transactions.date}) = ${currentYear}`;
+
       const [spending] = await db
         .select({
           total: sum(journalEntries.amount).mapWith(Number),
@@ -31,7 +38,8 @@ export const budgetsRouter = router({
         .where(
           and(
             eq(journalEntries.accountId, b.accountId),
-            sql`strftime('%Y-%m', ${transactions.date}) = ${currentMonth}`
+            dateFilter,
+            sql`${transactions.date} >= ${b.startDate}`
           )
         );
       
@@ -52,10 +60,27 @@ export const budgetsRouter = router({
       startDate: z.string(),
     }))
     .mutation(async ({ input }) => {
+      // Check if budget already exists
+      const existing = await db
+        .select()
+        .from(budgets)
+        .where(
+          and(
+            eq(budgets.accountId, input.accountId),
+            eq(budgets.period, input.period)
+          )
+        )
+        .limit(1);
+      
+      if (existing.length > 0) {
+        throw new Error('A budget already exists for this category and period');
+      }
+
       const id = crypto.randomUUID();
       await db.insert(budgets).values({
         id,
         ...input,
+        startDate: input.startDate.substring(0, 10), // Ensure YYYY-MM-DD
       });
       return id;
     }),

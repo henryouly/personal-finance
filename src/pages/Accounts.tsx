@@ -49,7 +49,11 @@ export default function Accounts() {
                   <Wallet className="w-6 h-6" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" title="Cleared balance matches current" />
+                  {account.totalBalance === account.clearedBalance && account.totalBalance !== 0 && (
+                    <span title="Cleared balance matches current">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    </span>
+                  )}
                   <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
                     <MoreVertical className="w-5 h-5" />
                   </button>
@@ -79,8 +83,9 @@ export default function Accounts() {
             <h2 className="text-xl font-bold mb-6">Add New Account</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                <label htmlFor="accountName" className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
                 <input 
+                  id="accountName"
                   type="text" 
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
@@ -90,8 +95,9 @@ export default function Accounts() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select 
+                  id="type"
                   value={formData.type}
                   onChange={e => setFormData({...formData, type: e.target.value as any})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"

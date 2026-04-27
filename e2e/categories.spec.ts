@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { cleanupDatabase } from './utils';
 
 test.describe('Hierarchical Categories', () => {
-  test.beforeEach(async ({ _page }) => {
+  test.beforeEach(async () => {
     await cleanupDatabase();
   });
 

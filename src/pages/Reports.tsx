@@ -62,12 +62,12 @@ export default function Reports() {
                   dataKey="total"
                   nameKey="categoryName"
                 >
-                  {(categorySpending.data || []).map((entry, index) => (
+                  {(categorySpending.data || []).map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: number) => formatCurrency(Math.abs(value))}
+                  formatter={(value: any) => formatCurrency(Math.abs(Number(value)))}
                 />
                 <Legend />
               </PieChart>
@@ -85,7 +85,7 @@ export default function Reports() {
                 <XAxis dataKey="name" />
                 <YAxis tickFormatter={(value) => `$${value/100}`} />
                 <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
+                  formatter={(value: any) => formatCurrency(Number(value))}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {ivsEData.map((entry, index) => (
@@ -107,7 +107,7 @@ export default function Reports() {
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(value) => `$${Math.abs(value)/100}`} />
                 <Tooltip 
-                  formatter={(value: number) => formatCurrency(Math.abs(value))}
+                  formatter={(value: any) => formatCurrency(Math.abs(Number(value)))}
                 />
                 <Line 
                   type="monotone" 
