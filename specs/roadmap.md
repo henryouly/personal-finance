@@ -24,7 +24,7 @@
 - [x] Automated categorization based on merchant history. ✅
 
 ## Phase 4: Analytics & Reporting (In Progress 🚧)
-- [ ] Income vs. Expense monthly comparison chart.
+- [x] Income vs. Expense monthly comparison chart. ✅
 - [ ] Category-wise spending breakdown (Donut chart).
 - [ ] Net worth tracking trend over time.
 - [ ] Savings rate calculator widget.
