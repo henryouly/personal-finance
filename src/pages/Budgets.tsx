@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
-import { formatCurrency } from '../domain/accounting';
 import { Plus, Target, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RouterOutputs } from '../utils/trpc';

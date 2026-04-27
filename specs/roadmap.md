@@ -7,7 +7,7 @@
 - [x] Core domain logic for transaction validation.
 - [x] Basic tRPC routers for Accounts and Transactions.
 
-## Phase 2: Account & Transaction Management (In Progress 🚧)
+## Phase 2: Account & Transaction Management (Completed ✅)
 - [x] Account creation and listing UI.
 - [x] Manual transaction entry with dual-account selection.
 - [x] Transaction list view with basic filtering.
@@ -16,14 +16,14 @@
 - [x] Implement account balance calculation logic (reconciliation). ✅
 - [x] Add support for multiple entries per transaction (split transactions). ✅
 
-## Phase 3: Budgeting & Categories (In Progress 🚧)
+## Phase 3: Budgeting & Categories (Completed ✅)
 - [x] Database schema for budgets.
 - [x] Implementation of Category management UI. ✅
 - [x] Budget creation and tracking logic. ✅
 - [x] Progress visualization for category spending limits. ✅
-- [ ] Automated categorization based on merchant history.
+- [x] Automated categorization based on merchant history. ✅
 
-## Phase 4: Analytics & Reporting (Planned 📅)
+## Phase 4: Analytics & Reporting (In Progress 🚧)
 - [ ] Income vs. Expense monthly comparison chart.
 - [ ] Category-wise spending breakdown (Donut chart).
 - [ ] Net worth tracking trend over time.

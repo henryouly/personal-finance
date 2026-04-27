@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
 import { Plus, Search, Filter, Download, Trash2, Loader2, CheckCircle, Circle, AlertCircle } from 'lucide-react';
@@ -26,6 +26,8 @@ interface Transaction {
 export default function Transactions() {
   const [searchParams] = useSearchParams();
   const accountId = searchParams.get('accountId');
+  const utils = trpc.useUtils();
+  const lastPredictedDescription = useRef('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
@@ -88,6 +90,29 @@ export default function Transactions() {
     statementDate: format(new Date(), 'yyyy-MM-dd'),
     statementBalance: '',
   });
+
+  const [suggestedField, setSuggestedField] = useState<number | null>(null);
+
+  const handleDescriptionBlur = async () => {
+    const desc = formData.description.trim();
+    if (!desc || desc === lastPredictedDescription.current || isSplitMode || editingTransaction) return;
+
+    try {
+      const predictedAccountId = await utils.transactions.predictCategory.fetch(desc);
+      if (predictedAccountId && !formData.entries[1].accountId) {
+        const newEntries = [...formData.entries];
+        newEntries[1].accountId = predictedAccountId;
+        setFormData({ ...formData, entries: newEntries });
+        
+        // Visual feedback
+        setSuggestedField(1);
+        setTimeout(() => setSuggestedField(null), 2000);
+        lastPredictedDescription.current = desc;
+      }
+    } catch (error) {
+      console.error('Failed to predict category:', error);
+    }
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -381,6 +406,7 @@ export default function Transactions() {
                     type="text" 
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
+                    onBlur={handleDescriptionBlur}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder="e.g. Starbucks Coffee"
                     required
@@ -410,7 +436,10 @@ export default function Transactions() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">To Account / Category</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        To Account / Category 
+                        {suggestedField === 1 && <span className="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full animate-pulse">Suggested</span>}
+                      </label>
                       <select 
                         value={formData.entries[1].accountId}
                         onChange={e => {
@@ -418,7 +447,10 @@ export default function Transactions() {
                           newEntries[1].accountId = e.target.value;
                           setFormData({ ...formData, entries: newEntries });
                         }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className={cn(
+                          "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-500",
+                          suggestedField === 1 && "ring-2 ring-blue-400 border-blue-400 bg-blue-50"
+                        )}
                         required
                       >
                         <option value="">{accounts.isLoading ? 'Loading categories...' : 'Select Category'}</option>

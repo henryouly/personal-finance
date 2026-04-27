@@ -1,11 +1,72 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
-import { transactions, journalEntries } from '../../../db/schema';
-import { eq, desc, and, gte, lte } from 'drizzle-orm';
+import { transactions, journalEntries, accounts } from '../../../db/schema';
+import { eq, desc, and, gte, lte, like, sql, count, or } from 'drizzle-orm';
 import { validateTransaction } from '../../domain/accounting';
 
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  'Dining Out': ['starbucks', 'mcdonalds', 'restaurant', 'cafe', 'pub', 'pizza', 'taco bell', 'burger king'],
+  'Groceries': ['walmart', 'costco', 'safeway', 'kroger', 'target', 'trader joe', 'whole foods', 'supermarket'],
+  'Software/Services': ['apple', 'google', 'netflix', 'spotify', 'aws', 'github', 'openai', 'microsoft'],
+  'Transportation': ['uber', 'lyft', 'gas', 'shell', 'chevron', 'parking', 'transit', 'subway'],
+};
+
 export const transactionsRouter = router({
+  predictCategory: publicProcedure
+    .input(z.string())
+    .query(async ({ input }) => {
+      const normalizedInput = input.trim().toLowerCase();
+      if (!normalizedInput || normalizedInput.length < 2) return null;
+
+      // 1. History-based match
+      const words = normalizedInput.split(/\s+/).filter(w => w.length > 2);
+      const historyMatchQuery = db
+        .select({
+          accountId: journalEntries.accountId,
+          useCount: count(),
+        })
+        .from(transactions)
+        .innerJoin(journalEntries, eq(transactions.id, journalEntries.transactionId))
+        .innerJoin(accounts, eq(journalEntries.accountId, accounts.id))
+        .where(and(
+          eq(accounts.type, 'expense'),
+          or(
+            like(sql`lower(${transactions.description})`, `%${normalizedInput}%`),
+            ...words.map(w => like(sql`lower(${transactions.description})`, `%${w}%`))
+          )
+        ))
+        .groupBy(journalEntries.accountId)
+        .orderBy(desc(count()))
+        .limit(1);
+
+      const [historyMatch] = await historyMatchQuery;
+
+      if (historyMatch) {
+        return historyMatch.accountId;
+      }
+
+      // 2. Keyword-based "AI" fallback
+      for (const [categoryName, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+        if (keywords.some(k => normalizedInput.includes(k))) {
+          const [account] = await db
+            .select({ id: accounts.id })
+            .from(accounts)
+            .where(and(
+              eq(accounts.type, 'expense'),
+              like(sql`lower(${accounts.name})`, `%${categoryName.toLowerCase()}%`)
+            ))
+            .limit(1);
+          
+          if (account) {
+            return account.id;
+          }
+        }
+      }
+
+      return null;
+    }),
+
   list: publicProcedure
     .input(z.object({
       startDate: z.string().optional(),
