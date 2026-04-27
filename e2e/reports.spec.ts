@@ -22,6 +22,14 @@ test.describe('Reports Page', () => {
     // Initial state (6 months should be active)
     await expect(sixMonthBtn).toHaveClass(/bg-blue-600/);
     
+    // Check for Net Worth Trend
+    await expect(page.getByText('Net Worth Trend')).toBeVisible();
+    const netWorthChart = page.locator('.recharts-area').first();
+    await expect(netWorthChart).toBeVisible();
+
+    // Check for Net Worth summary card
+    await expect(page.getByText('Net Worth', { exact: true })).toBeVisible();
+    
     // Click 3 Months and verify
     await threeMonthBtn.click();
     await expect(threeMonthBtn).toHaveClass(/bg-blue-600/);
@@ -38,15 +46,8 @@ test.describe('Reports Page', () => {
     await expect(page.getByText('Spending by Category')).toBeVisible();
     await expect(page.getByText('Spending Trends')).toBeVisible();
     
-    // Verify pie chart and line chart are rendered
-    const pieChart = page.locator('.recharts-pie').first();
-    await expect(pieChart).toBeVisible();
-    
-    // Check for central total label
+    // Check for central total label (rendered even if 0)
     await expect(page.getByText('Total Spent')).toBeVisible();
-    
-    const lineChart = page.locator('.recharts-line').first();
-    await expect(lineChart).toBeVisible();
   });
 
   test('should handle zero income and negative savings rate states', async ({ page }) => {

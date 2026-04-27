@@ -160,4 +160,76 @@ export const analyticsRouter = router({
 
       return Object.values(monthsMap).sort((a, b) => a.month.localeCompare(b.month));
     }),
+
+  netWorthHistory: publicProcedure
+    .input(z.object({
+      months: z.number().default(12),
+    }))
+    .query(async ({ input }) => {
+      const startDate = format(subMonths(startOfMonth(new Date()), input.months - 1), 'yyyy-MM-dd');
+
+      // 1. Get starting balance (sum of all asset/liability entries BEFORE startDate)
+      const [startBalanceResult] = await db
+        .select({
+          assets: sum(sql`CASE WHEN ${accounts.type} = 'asset' THEN ${journalEntries.amount} ELSE 0 END`).mapWith(Number),
+          liabilities: sum(sql`CASE WHEN ${accounts.type} = 'liability' THEN ${journalEntries.amount} ELSE 0 END`).mapWith(Number),
+        })
+        .from(journalEntries)
+        .innerJoin(transactions, eq(journalEntries.transactionId, transactions.id))
+        .innerJoin(accounts, eq(journalEntries.accountId, accounts.id))
+        .where(
+          and(
+            sql`${accounts.type} IN ('asset', 'liability')`,
+            sql`${transactions.date} < ${startDate}`
+          )
+        );
+
+      let runningAssets = startBalanceResult?.assets || 0;
+      let runningLiabilities = startBalanceResult?.liabilities || 0;
+
+      // 2. Get monthly changes within the window
+      const monthlyChanges = await db
+        .select({
+          month: sql<string>`strftime('%Y-%m', ${transactions.date})`,
+          assets: sum(sql`CASE WHEN ${accounts.type} = 'asset' THEN ${journalEntries.amount} ELSE 0 END`).mapWith(Number),
+          liabilities: sum(sql`CASE WHEN ${accounts.type} = 'liability' THEN ${journalEntries.amount} ELSE 0 END`).mapWith(Number),
+        })
+        .from(journalEntries)
+        .innerJoin(transactions, eq(journalEntries.transactionId, transactions.id))
+        .innerJoin(accounts, eq(journalEntries.accountId, accounts.id))
+        .where(
+          and(
+            sql`${accounts.type} IN ('asset', 'liability')`,
+            gte(transactions.date, startDate)
+          )
+        )
+        .groupBy(sql`strftime('%Y-%m', ${transactions.date})`)
+        .orderBy(sql`strftime('%Y-%m', ${transactions.date})`);
+
+      // 3. Combine into a trend
+      const trend = [];
+      const changesMap: Record<string, { assets: number, liabilities: number }> = {};
+      monthlyChanges.forEach(c => {
+        changesMap[c.month] = { assets: c.assets, liabilities: c.liabilities };
+      });
+
+      for (let i = 0; i < input.months; i++) {
+        // We need to iterate from oldest to newest to calculate cumulative
+        const date = subMonths(new Date(), (input.months - 1) - i);
+        const monthKey = format(date, 'yyyy-MM');
+        
+        const change = changesMap[monthKey] || { assets: 0, liabilities: 0 };
+        runningAssets += change.assets;
+        runningLiabilities += change.liabilities;
+
+        trend.push({
+          month: monthKey,
+          assets: runningAssets,
+          liabilities: Math.abs(runningLiabilities), // Usually negative, show as positive for stacking if needed
+          netWorth: runningAssets + runningLiabilities,
+        });
+      }
+
+      return trend;
+    }),
 });

@@ -26,7 +26,7 @@
 ## Phase 4: Analytics & Reporting (In Progress 🚧)
 - [x] Income vs. Expense monthly comparison chart. ✅
 - [x] Category-wise spending breakdown (Donut chart). ✅
-- [ ] Net worth tracking trend over time.
+- [x] Net worth tracking trend over time. ✅
 - [ ] Savings rate calculator widget.
 - [ ] Top merchants/payees report.
 

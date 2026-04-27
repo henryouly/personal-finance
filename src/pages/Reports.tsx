@@ -15,9 +15,11 @@ import {
   Pie,
   Cell,
   LineChart,
-  Line
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
-import { Calendar, Tag } from 'lucide-react';
+import { Calendar, Tag, TrendingUp } from 'lucide-react';
 
 export default function Reports() {
   const [months, setMonths] = useState(6);
@@ -30,6 +32,7 @@ export default function Reports() {
   const categorySpending = trpc.analytics.categorySpending.useQuery(dateRange);
   const monthlyIncomeVsExpense = trpc.analytics.monthlyIncomeVsExpense.useQuery({ months });
   const monthlySpending = trpc.analytics.monthlySpending.useQuery({ months });
+  const netWorthHistory = trpc.analytics.netWorthHistory.useQuery({ months });
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -39,6 +42,7 @@ export default function Reports() {
   const savingsRate = avgIncome > 0 ? (avgNet / avgIncome) * 100 : 0;
 
   const totalCategorySpending = categorySpending.data?.reduce((acc, c) => acc + Math.abs(c.total), 0) || 0;
+  const currentNetWorth = netWorthHistory.data?.[netWorthHistory.data.length - 1]?.netWorth || 0;
 
   return (
     <div className="space-y-8">
@@ -62,10 +66,11 @@ export default function Reports() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SummaryCard title="Avg. Monthly Income" value={formatCurrency(avgIncome)} color="green" />
-        <SummaryCard title="Avg. Monthly Expense" value={formatCurrency(avgExpense)} color="red" />
-        <SummaryCard title="Avg. Monthly Savings" value={formatCurrency(avgNet)} color="blue" />
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <SummaryCard title="Net Worth" value={formatCurrency(currentNetWorth)} color="blue" />
+        <SummaryCard title="Avg. Income" value={formatCurrency(avgIncome)} color="green" />
+        <SummaryCard title="Avg. Expense" value={formatCurrency(avgExpense)} color="red" />
+        <SummaryCard title="Avg. Savings" value={formatCurrency(avgNet)} color="blue" />
         <SummaryCard 
           title="Savings Rate" 
           value={`${savingsRate.toFixed(1)}%`} 
@@ -74,6 +79,46 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Net Worth Trend */}
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
+              Net Worth Trend
+            </h2>
+          </div>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={netWorthHistory.data}>
+                <defs>
+                  <linearGradient id="colorNetWorth" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis 
+                  dataKey="month" 
+                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')} 
+                />
+                <YAxis tickFormatter={(value) => `$${value/100}`} />
+                <Tooltip 
+                  formatter={(value: any) => formatCurrency(Number(value))}
+                  labelFormatter={(label) => format(new Date(label + '-02'), 'MMMM yyyy')}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="netWorth" 
+                  stroke="#3b82f6" 
+                  fillOpacity={1} 
+                  fill="url(#colorNetWorth)" 
+                  strokeWidth={3}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
         {/* Income vs Expense Comparison */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
