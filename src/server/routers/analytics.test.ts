@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import app from '../index';
 import { db } from '../../../db';
 import { accounts, transactions, journalEntries } from '../../../db/schema';
-import { format, subMonths, startOfMonth } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 
 describe('Analytics Router', () => {
   beforeEach(async () => {
@@ -24,7 +24,6 @@ describe('Analytics Router', () => {
     ]);
 
     const currentMonth = format(new Date(), 'yyyy-MM');
-    const lastMonth = format(subMonths(new Date(), 1), 'yyyy-MM');
 
     // Salary: Income (Credit -5000), Asset (Debit +5000)
     const tx1Id = crypto.randomUUID();
