@@ -20,7 +20,7 @@ import {
   Area,
   ReferenceLine
 } from 'recharts';
-import { Calendar, Tag, TrendingUp, Percent } from 'lucide-react';
+import { Calendar, Tag, TrendingUp, Percent, Store } from 'lucide-react';
 
 export default function Reports() {
   const [months, setMonths] = useState(6);
@@ -34,6 +34,7 @@ export default function Reports() {
   const monthlyIncomeVsExpense = trpc.analytics.monthlyIncomeVsExpense.useQuery({ months });
   const monthlySpending = trpc.analytics.monthlySpending.useQuery({ months });
   const netWorthHistory = trpc.analytics.netWorthHistory.useQuery({ months });
+  const topMerchants = trpc.analytics.topMerchants.useQuery(dateRange);
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -291,6 +292,42 @@ export default function Reports() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </section>
+
+        {/* Top Merchants */}
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1">
+          <h2 className="text-lg font-semibold mb-6 flex items-center">
+            <Store className="w-5 h-5 mr-2 text-purple-500" />
+            Top Merchants
+          </h2>
+          <div className="space-y-6">
+            {topMerchants.data?.length === 0 ? (
+              <p className="text-center py-8 text-gray-500">No merchant data for this period.</p>
+            ) : (
+              topMerchants.data?.map((merchant, index) => {
+                const maxSpending = topMerchants.data?.[0]?.total || 0;
+                const percentage = maxSpending > 0 ? (merchant.total / maxSpending) * 100 : 0;
+                
+                return (
+                  <div key={merchant.name + index} className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{merchant.name}</p>
+                        <p className="text-xs text-gray-500">{merchant.transactionCount} transactions</p>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900">{formatCurrency(merchant.total)}</p>
+                    </div>
+                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-purple-500 rounded-full" 
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
       </div>

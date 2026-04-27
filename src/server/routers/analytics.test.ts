@@ -129,4 +129,47 @@ describe('Analytics Router', () => {
     const m2 = data[1];
     expect(m2.netWorth).toBe(100000);
   });
+
+  it('should return top merchants correctly', async () => {
+    const assetAccId = crypto.randomUUID();
+    const expenseAccId = crypto.randomUUID();
+
+    await db.insert(accounts).values([
+      { id: assetAccId, name: 'Bank', type: 'asset' },
+      { id: expenseAccId, name: 'Food', type: 'expense' },
+    ]);
+
+    const date = format(new Date(), 'yyyy-MM-dd');
+
+    // Merchant A: 2 transactions, total $30
+    for (let i = 0; i < 2; i++) {
+      const txId = crypto.randomUUID();
+      await db.insert(transactions).values({ id: txId, date, description: 'Starbucks' });
+      await db.insert(journalEntries).values([
+        { id: crypto.randomUUID(), transactionId: txId, accountId: expenseAccId, amount: 1500 },
+        { id: crypto.randomUUID(), transactionId: txId, accountId: assetAccId, amount: -1500 },
+      ]);
+    }
+
+    // Merchant B: 1 transaction, total $50
+    const txBId = crypto.randomUUID();
+    await db.insert(transactions).values({ id: txBId, date, description: 'Amazon' });
+    await db.insert(journalEntries).values([
+      { id: crypto.randomUUID(), transactionId: txBId, accountId: expenseAccId, amount: 5000 },
+      { id: crypto.randomUUID(), transactionId: txBId, accountId: assetAccId, amount: -5000 },
+    ]);
+
+    const res = await app.request(`/trpc/analytics.topMerchants?batch=1&input={"0":{"startDate":"2000-01-01","endDate":"2100-01-01"}}`);
+    const json = await res.json();
+    const data = json[0].result.data;
+
+    expect(data).toHaveLength(2);
+    expect(data[0].name).toBe('Amazon');
+    expect(data[0].total).toBe(5000);
+    expect(data[0].transactionCount).toBe(1);
+
+    expect(data[1].name).toBe('Starbucks');
+    expect(data[1].total).toBe(3000);
+    expect(data[1].transactionCount).toBe(2);
+  });
 });

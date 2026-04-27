@@ -45,6 +45,7 @@ test.describe('Reports Page', () => {
     
     await expect(page.getByText('Spending by Category')).toBeVisible();
     await expect(page.getByText('Spending Trends')).toBeVisible();
+    await expect(page.getByText('Top Merchants')).toBeVisible();
     
     // Check for central total label (rendered even if 0)
     await expect(page.getByText('Total Spent')).toBeVisible();

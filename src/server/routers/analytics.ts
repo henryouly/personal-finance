@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
 import { transactions, journalEntries, accounts } from '../../../db/schema';
-import { eq, and, gte, lte, sum, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, sum, sql, count, desc } from 'drizzle-orm';
 import { format, subMonths, startOfMonth } from 'date-fns';
 
 export const analyticsRouter = router({
@@ -231,5 +231,38 @@ export const analyticsRouter = router({
       }
 
       return trend;
+    }),
+
+  topMerchants: publicProcedure
+    .input(z.object({
+      startDate: z.string(),
+      endDate: z.string(),
+      limit: z.number().default(10),
+    }))
+    .query(async ({ input }) => {
+      const results = await db
+        .select({
+          name: transactions.description,
+          total: sum(journalEntries.amount).mapWith(Number),
+          transactionCount: count(transactions.id),
+        })
+        .from(journalEntries)
+        .innerJoin(transactions, eq(journalEntries.transactionId, transactions.id))
+        .innerJoin(accounts, eq(journalEntries.accountId, accounts.id))
+        .where(
+          and(
+            eq(accounts.type, 'expense'),
+            gte(transactions.date, input.startDate),
+            lte(transactions.date, input.endDate)
+          )
+        )
+        .groupBy(transactions.description)
+        .orderBy(desc(sql`SUM(${journalEntries.amount})`))
+        .limit(input.limit);
+      
+      return results.map(r => ({
+        ...r,
+        total: Math.abs(r.total)
+      }));
     }),
 });
