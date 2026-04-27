@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { cleanupDatabase } from './utils';
+import { format } from 'date-fns';
 
 test.describe('Budgeting', () => {
   test.beforeEach(async () => {
@@ -52,7 +53,8 @@ test.describe('Budgeting', () => {
     const toSelect = page.locator('select').nth(1);
     await expect(fromSelect).not.toContainText('Loading accounts...');
     
-    await page.fill('input[type="date"]', new Date().toISOString().split('T')[0]);
+    const localDate = format(new Date(), 'yyyy-MM-dd');
+    await page.fill('input[type="date"]', localDate);
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Dinner');
     
     await fromSelect.selectOption({ label: 'Checking' });

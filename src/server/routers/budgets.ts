@@ -3,12 +3,13 @@ import { router, publicProcedure } from '../trpc';
 import { db } from '../../../db';
 import { budgets, accounts, journalEntries, transactions } from '../../../db/schema';
 import { eq, and, sum, sql } from 'drizzle-orm';
+import { format } from 'date-fns';
 
 export const budgetsRouter = router({
   list: publicProcedure.query(async () => {
     const now = new Date();
-    const currentMonth = now.toISOString().substring(0, 7); // YYYY-MM
-    const currentYear = now.toISOString().substring(0, 4); // YYYY
+    const currentMonth = format(now, 'yyyy-MM');
+    const currentYear = format(now, 'yyyy');
 
     const results = await db
       .select({

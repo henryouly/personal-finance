@@ -75,7 +75,7 @@ export default function Transactions() {
   });
 
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: format(new Date(), 'yyyy-MM-dd'),
     description: '',
     entries: [
       { accountId: '', amount: '' },
@@ -84,7 +84,7 @@ export default function Transactions() {
   });
 
   const [reconcileData, setReconcileData] = useState({
-    statementDate: new Date().toISOString().split('T')[0],
+    statementDate: format(new Date(), 'yyyy-MM-dd'),
     statementBalance: '',
   });
 
@@ -112,7 +112,7 @@ export default function Transactions() {
       setEditingTransaction(null);
       setIsSplitMode(false);
       setFormData({
-        date: new Date().toISOString().split('T')[0],
+        date: format(new Date(), 'yyyy-MM-dd'),
         description: '',
         entries: [
           { accountId: '', amount: '' },

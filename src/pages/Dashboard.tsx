@@ -1,5 +1,6 @@
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
+import { format, startOfMonth } from 'date-fns';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -10,8 +11,8 @@ import {
 export default function Dashboard() {
   const accounts = trpc.accounts.list.useQuery({ classification: 'asset' });
   const ivsE = trpc.analytics.incomeVsExpense.useQuery({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
-    endDate: new Date().toISOString()
+    startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+    endDate: format(new Date(), 'yyyy-MM-dd')
   });
 
   return (

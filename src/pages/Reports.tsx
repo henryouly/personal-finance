@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
+import { format, startOfMonth, subMonths } from 'date-fns';
 import { 
   BarChart, 
   Bar, 
@@ -20,8 +21,8 @@ import { Calendar } from 'lucide-react';
 
 export default function Reports() {
   const [dateRange] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString(),
-    endDate: new Date().toISOString(),
+    startDate: format(subMonths(startOfMonth(new Date()), 1), 'yyyy-MM-dd'),
+    endDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
   const categorySpending = trpc.analytics.categorySpending.useQuery(dateRange);

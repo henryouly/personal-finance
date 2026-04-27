@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
 import { Plus, Target, AlertCircle, Pencil, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
 import { RouterOutputs } from '../utils/trpc';
 
 type AppBudget = RouterOutputs['budgets']['list'][number];
@@ -86,7 +87,7 @@ export default function Budgets() {
       createBudget.mutate({
         ...formData,
         limitAmount: Math.round(parseFloat(formData.limitAmount) * 100),
-        startDate: new Date().toISOString(),
+        startDate: format(new Date(), 'yyyy-MM-dd'),
       });
     }
   };
