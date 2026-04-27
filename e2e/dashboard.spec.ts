@@ -83,4 +83,23 @@ test.describe('Dashboard', () => {
     const progressBar = budgetSection.locator('.bg-red-500');
     await expect(progressBar).toBeVisible();
   });
+
+  test('should display summary cards including savings rate', async ({ page }) => {
+    await page.goto('/');
+    
+    await expect(page.getByTestId('summary-balance')).toBeVisible();
+    await expect(page.getByTestId('summary-income')).toBeVisible();
+    await expect(page.getByTestId('summary-expense')).toBeVisible();
+    
+    const savingsRateCard = page.getByTestId('summary-savings-rate');
+    await expect(savingsRateCard).toBeVisible();
+    
+    // Verify icon exists
+    const icon = savingsRateCard.locator('svg');
+    await expect(icon).toBeVisible();
+
+    // Verify format
+    const rateValue = await savingsRateCard.locator('p').last().innerText();
+    expect(rateValue).toMatch(/\d+\.\d+%/);
+  });
 });

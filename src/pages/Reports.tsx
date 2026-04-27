@@ -17,9 +17,10 @@ import {
   LineChart,
   Line,
   AreaChart,
-  Area
+  Area,
+  ReferenceLine
 } from 'recharts';
-import { Calendar, Tag, TrendingUp } from 'lucide-react';
+import { Calendar, Tag, TrendingUp, Percent } from 'lucide-react';
 
 export default function Reports() {
   const [months, setMonths] = useState(6);
@@ -44,6 +45,11 @@ export default function Reports() {
   const totalCategorySpending = categorySpending.data?.reduce((acc, c) => acc + Math.abs(c.total), 0) || 0;
   const currentNetWorth = netWorthHistory.data?.[netWorthHistory.data.length - 1]?.netWorth || 0;
 
+  const savingsRateHistory = (monthlyIncomeVsExpense.data || []).map(d => ({
+    ...d,
+    rate: d.income > 0 ? ((d.income - d.expense) / d.income) * 100 : 0
+  }));
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -67,14 +73,15 @@ export default function Reports() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <SummaryCard title="Net Worth" value={formatCurrency(currentNetWorth)} color="blue" />
-        <SummaryCard title="Avg. Income" value={formatCurrency(avgIncome)} color="green" />
-        <SummaryCard title="Avg. Expense" value={formatCurrency(avgExpense)} color="red" />
-        <SummaryCard title="Avg. Savings" value={formatCurrency(avgNet)} color="blue" />
+        <SummaryCard title="Net Worth" value={formatCurrency(currentNetWorth)} color="blue" data-testid="summary-net-worth" />
+        <SummaryCard title="Avg. Income" value={formatCurrency(avgIncome)} color="green" data-testid="summary-income" />
+        <SummaryCard title="Avg. Expense" value={formatCurrency(avgExpense)} color="red" data-testid="summary-expense" />
+        <SummaryCard title="Avg. Savings" value={formatCurrency(avgNet)} color="blue" data-testid="summary-savings" />
         <SummaryCard 
           title="Savings Rate" 
           value={`${savingsRate.toFixed(1)}%`} 
           color={savingsRate >= 0 ? 'green' : 'red'} 
+          data-testid="summary-savings-rate"
         />
       </div>
 
@@ -156,6 +163,42 @@ export default function Reports() {
                   radius={[4, 4, 0, 0]} 
                   barSize={32}
                 />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        {/* Savings Rate Trend */}
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold flex items-center">
+              <Percent className="w-5 h-5 mr-2 text-green-500" />
+              Savings Rate Trend
+            </h2>
+          </div>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={savingsRateHistory}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis 
+                  dataKey="month" 
+                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')} 
+                />
+                <YAxis tickFormatter={(value) => `${value}%`} />
+                <Tooltip 
+                  formatter={(value: any) => [`${Number(value).toFixed(1)}%`, 'Savings Rate']}
+                  labelFormatter={(label) => format(new Date(label + '-02'), 'MMMM yyyy')}
+                />
+                <ReferenceLine y={0} stroke="#000" />
+                <Bar 
+                  dataKey="rate" 
+                  radius={[4, 4, 0, 0]}
+                  barSize={40}
+                >
+                  {savingsRateHistory.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.rate >= 0 ? '#10b981' : '#ef4444'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -255,7 +298,12 @@ export default function Reports() {
   );
 }
 
-function SummaryCard({ title, value, color }: { title: string, value: string, color: 'green' | 'red' | 'blue' }) {
+function SummaryCard({ title, value, color, "data-testid": testId }: { 
+  title: string, 
+  value: string, 
+  color: 'green' | 'red' | 'blue',
+  "data-testid"?: string
+}) {
   const colors = {
     green: 'text-green-600 bg-green-50',
     red: 'text-red-600 bg-red-50',
@@ -263,7 +311,7 @@ function SummaryCard({ title, value, color }: { title: string, value: string, co
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100" data-testid={testId}>
       <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{title}</p>
       <p className={`text-xl font-bold ${colors[color].split(' ')[0]}`}>{value}</p>
     </div>

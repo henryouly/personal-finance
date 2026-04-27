@@ -9,6 +9,7 @@ import {
   Plus,
   Target,
   ChevronRight,
+  PieChart as PieChartIcon
 } from 'lucide-react';
 import { BudgetProgress } from '../components/BudgetProgress';
 import { Link } from 'react-router-dom';
@@ -22,6 +23,10 @@ export default function Dashboard() {
     endDate: format(new Date(), 'yyyy-MM-dd')
   });
 
+  const income = ivsE.data?.income || 0;
+  const expense = ivsE.data?.expense || 0;
+  const savingsRate = income > 0 ? ((income - expense) / income) * 100 : 0;
+
   return (
     <div className="space-y-8">
       <header>
@@ -30,24 +35,34 @@ export default function Dashboard() {
       </header>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card 
           title="Total Balance" 
           amount={formatCurrency(accounts.data?.reduce((acc, a) => acc + a.totalBalance, 0) || 0)}
           icon={Wallet}
           color="blue"
+          data-testid="summary-balance"
         />
         <Card 
           title="Monthly Income" 
-          amount={formatCurrency(ivsE.data?.income || 0)} 
+          amount={formatCurrency(income)} 
           icon={TrendingUp}
           color="green"
+          data-testid="summary-income"
         />
         <Card 
           title="Monthly Expenses" 
-          amount={formatCurrency(ivsE.data?.expense || 0)} 
+          amount={formatCurrency(expense)} 
           icon={TrendingDown}
           color="red"
+          data-testid="summary-expense"
+        />
+        <Card 
+          title="Savings Rate" 
+          amount={`${savingsRate.toFixed(1)}%`}
+          icon={PieChartIcon}
+          color={savingsRate >= 0 ? 'green' : 'red'}
+          data-testid="summary-savings-rate"
         />
       </div>
 
@@ -144,12 +159,13 @@ export default function Dashboard() {
   );
 }
 
-function Card({ title, amount, icon: Icon, color, subtext }: { 
+function Card({ title, amount, icon: Icon, color, subtext, "data-testid": testId }: { 
   title: string, 
   amount: string, 
   icon: any, 
   color: 'blue' | 'green' | 'red',
-  subtext?: string
+  subtext?: string,
+  "data-testid"?: string
 }) {
   const colors = {
     blue: 'bg-blue-50 text-blue-600',
@@ -158,7 +174,7 @@ function Card({ title, amount, icon: Icon, color, subtext }: {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100" data-testid={testId}>
       <div className="flex items-center justify-between mb-4">
         <div className={cn("p-2 rounded-lg", colors[color])}>
           <Icon className="w-6 h-6" />

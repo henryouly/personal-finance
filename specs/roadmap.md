@@ -27,7 +27,7 @@
 - [x] Income vs. Expense monthly comparison chart. ✅
 - [x] Category-wise spending breakdown (Donut chart). ✅
 - [x] Net worth tracking trend over time. ✅
-- [ ] Savings rate calculator widget.
+- [x] Savings rate calculator widget. ✅
 - [ ] Top merchants/payees report.
 
 ## Phase 5: Bulk Operations & Advanced Features (Planned 📅)

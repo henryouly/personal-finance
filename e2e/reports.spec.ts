@@ -22,22 +22,22 @@ test.describe('Reports Page', () => {
     // Initial state (6 months should be active)
     await expect(sixMonthBtn).toHaveClass(/bg-blue-600/);
     
-    // Check for Net Worth Trend
+    // Check for chart sections
     await expect(page.getByText('Net Worth Trend')).toBeVisible();
-    const netWorthChart = page.locator('.recharts-area').first();
-    await expect(netWorthChart).toBeVisible();
+    await expect(page.getByText('Income vs Expenses')).toBeVisible();
+    await expect(page.getByText('Savings Rate Trend')).toBeVisible();
 
     // Check for Net Worth summary card
-    await expect(page.getByText('Net Worth', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('summary-net-worth')).toBeVisible();
     
     // Click 3 Months and verify
     await threeMonthBtn.click();
     await expect(threeMonthBtn).toHaveClass(/bg-blue-600/);
     await expect(sixMonthBtn).not.toHaveClass(/bg-blue-600/);
     
-    // Verify chart SVG is rendered
-    const chart = page.locator('.recharts-responsive-container').first();
-    await expect(chart).toBeVisible();
+    // Verify chart containers exist
+    const charts = page.locator('.recharts-responsive-container');
+    await expect(charts).toHaveCount(5); // Net Worth, IvE, Savings Rate, Category, Trends
   });
 
   test('should display category breakdown and spending trends', async ({ page }) => {
@@ -51,11 +51,9 @@ test.describe('Reports Page', () => {
   });
 
   test('should handle zero income and negative savings rate states', async ({ page }) => {
-    // We assume the DB is clean or seeded with zero income by default in some test environments
-    // or we just check the current state's UI logic.
     await page.goto('/reports');
     
-    const savingsRateCard = page.locator('div:has-text("Savings Rate")').last();
+    const savingsRateCard = page.getByTestId('summary-savings-rate');
     await expect(savingsRateCard).toBeVisible();
     
     // Check if it handles 0% or some value
