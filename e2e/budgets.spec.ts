@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { cleanupDatabase } from './utils';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 test.describe('Budgeting', () => {
   test.beforeEach(async () => {
@@ -61,7 +61,6 @@ test.describe('Budgeting', () => {
     await toSelect.selectOption({ label: 'Dining Out' });
     
     await page.getByPlaceholder('0.00').fill('50');
-    await page.screenshot({ path: 'test-results/final-check-before-save.png' });
     await page.getByRole('button', { name: 'Save Transaction' }).click();
     
     // Check if modal closed
@@ -70,6 +69,59 @@ test.describe('Budgeting', () => {
     // Go back to budgets and check progress
     await page.goto('/budgets');
     await expect(page.getByText(/\$50\.00 spent/)).toBeVisible();
+    await expect(page.getByText(/75% remaining/)).toBeVisible();
+  });
+
+  test('should respect start date for budget', async ({ page }) => {
+    await setupAccounts(page);
+
+    // 1. Create a budget starting today
+    await page.goto('/budgets');
+    await page.getByRole('button', { name: 'Set Budget' }).first().click();
+    await expect(page.getByLabel('Category')).not.toContainText('Loading categories...');
+    await page.getByLabel('Category').selectOption({ label: 'Dining Out' });
+    await page.getByLabel('Limit Amount ($)').fill('100');
+    await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
+    await expect(page.getByRole('heading', { name: 'Dining Out', exact: true })).toBeVisible();
+
+    // 2. Add a transaction dated YESTERDAY
+    await page.goto('/transactions');
+    await page.getByRole('button', { name: 'New Transaction' }).click();
+    
+    const fromSelect = page.locator('select').first();
+    const toSelect = page.locator('select').nth(1);
+    await expect(fromSelect).not.toContainText('Loading accounts...');
+    
+    const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+    await page.fill('input[type="date"]', yesterday);
+    await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Yesterday Dinner');
+    await fromSelect.selectOption({ label: 'Checking' });
+    await toSelect.selectOption({ label: 'Dining Out' });
+    await page.getByPlaceholder('0.00').fill('40');
+    await page.getByRole('button', { name: 'Save Transaction' }).click();
+    await expect(page.getByRole('heading', { name: 'New Transaction' })).not.toBeVisible();
+
+    // 3. Verify budget still shows $0.00 spent
+    await page.goto('/budgets');
+    await expect(page.getByText(/\$0\.00 spent/)).toBeVisible();
+
+    // 4. Add a transaction dated TODAY
+    await page.goto('/transactions');
+    await page.getByRole('button', { name: 'New Transaction' }).click();
+    await expect(fromSelect).not.toContainText('Loading accounts...');
+    
+    const today = format(new Date(), 'yyyy-MM-dd');
+    await page.fill('input[type="date"]', today);
+    await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Today Lunch');
+    await fromSelect.selectOption({ label: 'Checking' });
+    await toSelect.selectOption({ label: 'Dining Out' });
+    await page.getByPlaceholder('0.00').fill('25');
+    await page.getByRole('button', { name: 'Save Transaction' }).click();
+    await expect(page.getByRole('heading', { name: 'New Transaction' })).not.toBeVisible();
+
+    // 5. Verify budget shows $25.00 spent
+    await page.goto('/budgets');
+    await expect(page.getByText(/\$25\.00 spent/)).toBeVisible();
     await expect(page.getByText(/75% remaining/)).toBeVisible();
   });
 
