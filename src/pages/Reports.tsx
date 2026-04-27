@@ -17,7 +17,7 @@ import {
   LineChart,
   Line
 } from 'recharts';
-import { Calendar } from 'lucide-react';
+import { Calendar, Tag } from 'lucide-react';
 
 export default function Reports() {
   const [months, setMonths] = useState(6);
@@ -37,6 +37,8 @@ export default function Reports() {
   const avgExpense = (monthlyIncomeVsExpense.data?.reduce((acc, d) => acc + d.expense, 0) || 0) / months;
   const avgNet = avgIncome - avgExpense;
   const savingsRate = avgIncome > 0 ? (avgNet / avgIncome) * 100 : 0;
+
+  const totalCategorySpending = categorySpending.data?.reduce((acc, c) => acc + Math.abs(c.total), 0) || 0;
 
   return (
     <div className="space-y-8">
@@ -116,30 +118,62 @@ export default function Reports() {
 
         {/* Category Breakdown */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold mb-6">Spending by Category</h2>
-          <div className="h-80 w-full">
+          <h2 className="text-lg font-semibold mb-6 flex items-center">
+            <Tag className="w-5 h-5 mr-2 text-blue-500" />
+            Spending by Category
+          </h2>
+          <div className="h-80 w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={categorySpending.data || []}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
+                  innerRadius={70}
                   outerRadius={100}
                   paddingAngle={5}
                   dataKey="total"
                   nameKey="categoryName"
+                  stroke="none"
                 >
-                  {(categorySpending.data || []).map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {(categorySpending.data || []).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: any) => formatCurrency(Math.abs(Number(value)))}
+                  formatter={(value: any) => {
+                    const amount = Math.abs(Number(value));
+                    const percent = totalCategorySpending > 0 ? (amount / totalCategorySpending * 100).toFixed(1) : 0;
+                    return [`${formatCurrency(amount)} (${percent}%)`, 'Total'];
+                  }}
                 />
-                <Legend />
               </PieChart>
             </ResponsiveContainer>
+            {/* Center Text Overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-xs text-gray-500 uppercase font-medium">Total Spent</span>
+              <span className="text-xl font-bold text-gray-900">{formatCurrency(totalCategorySpending)}</span>
+            </div>
+          </div>
+          
+          {/* Legend Table */}
+          <div className="mt-6 space-y-2 max-h-48 overflow-y-auto">
+            {(categorySpending.data || [])
+              .sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
+              .map((category, index) => (
+                <div key={category.categoryId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg text-sm">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: category.color || COLORS[index % COLORS.length] }} />
+                    <span className="font-medium text-gray-700">{category.categoryName}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-gray-900 font-semibold">{formatCurrency(Math.abs(category.total))}</span>
+                    <span className="text-gray-400 text-xs ml-2">
+                      ({totalCategorySpending > 0 ? (Math.abs(category.total) / totalCategorySpending * 100).toFixed(1) : 0}%)
+                    </span>
+                  </div>
+                </div>
+              ))}
           </div>
         </section>
 

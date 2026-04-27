@@ -42,6 +42,9 @@ test.describe('Reports Page', () => {
     const pieChart = page.locator('.recharts-pie').first();
     await expect(pieChart).toBeVisible();
     
+    // Check for central total label
+    await expect(page.getByText('Total Spent')).toBeVisible();
+    
     const lineChart = page.locator('.recharts-line').first();
     await expect(lineChart).toBeVisible();
   });
