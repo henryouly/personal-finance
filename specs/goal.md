@@ -22,16 +22,17 @@ Whether it's a manual coffee purchase or a monthly salary deposit, logging trans
 Users can look back at any period (month, quarter, year) and see exactly how their net worth changed, where they overspent, and their savings rate.
 - **Success Criteria:** Reports load in <500ms and match the sum of individual transactions perfectly.
 
-### 2.4 Proactive Budgeting
-Users set spending caps on categories like "Dining Out" or "Shopping" and receive visual feedback on their proximity to these limits.
-- **Success Criteria:** Budget progress bars update in real-time as transactions are added.
+### 2.4 Multi-Period Proactive Budgeting
+Users set spending caps on categories for specific timeframes (Monthly or Yearly). The system intelligently calculates progress by only considering transactions on or after the budget's specified start date.
+- **Success Criteria:** Budget progress bars update in real-time, accurately handle timezone-safe local dates, and differentiate between monthly and yearly goals.
 
 ### 2.5 Bulk Data Management (CSV Import)
 Transitioning from a bank portal to the app should be seamless through a robust CSV import workflow that handles deduplication.
 - **Success Criteria:** Importing a month's worth of bank data (50+ rows) takes less than 1 minute of user interaction.
 
 ## 3. User Interaction Model
-- **Dashboard First:** The user starts at a high-level overview showing "The Big Numbers" (Total Balance, Monthly Income, Monthly Expenses).
+- **Dashboard First:** The primary view features a "Financial Overview" of high-level balances and a **"Budget Progress" overview** that highlights at-risk spending categories.
 - **Contextual Actions:** "New Transaction" and "Import" are globally accessible or prominent on the primary view.
 - **Visual Feedback:** Color coding (Green for income/under-budget, Red for expenses/over-budget) is used consistently to provide immediate subconscious status updates.
-- **Drill-Down Navigation:** Users can click on a chart slice or an account card to see the underlying transaction list filtered to that specific context.
+- **Drill-Down Navigation:** Users can click on a budget overview item, chart slice, or account card to see the underlying transaction list filtered to that specific context.
+- **Seamless Flow:** Navigation is connected across domains (e.g., clicking a "Target" icon on a Category instantly opens the Budget configuration for that specific account).
