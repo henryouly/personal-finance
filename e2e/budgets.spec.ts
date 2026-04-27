@@ -81,6 +81,11 @@ test.describe('Budgeting', () => {
     await expect(page.getByLabel('Category')).not.toContainText('Loading categories...');
     await page.getByLabel('Category').selectOption({ label: 'Dining Out' });
     await page.getByLabel('Limit Amount ($)').fill('100');
+    
+    // Explicitly set start date to today to ensure yesterday's transaction is ignored
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    await page.getByLabel('Start Date').fill(todayStr);
+    
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
     await expect(page.getByRole('heading', { name: 'Dining Out', exact: true })).toBeVisible();
 
@@ -123,6 +128,79 @@ test.describe('Budgeting', () => {
     await page.goto('/budgets');
     await expect(page.getByText(/\$25\.00 spent/)).toBeVisible();
     await expect(page.getByText(/75% remaining/)).toBeVisible();
+  });
+
+  test('should track yearly budget progress', async ({ page }) => {
+    await setupAccounts(page);
+
+    await page.goto('/budgets');
+    
+    // Create a yearly budget
+    await page.getByRole('button', { name: 'Set Budget' }).first().click();
+    await expect(page.getByLabel('Category')).not.toContainText('Loading categories...');
+    await page.getByLabel('Category').selectOption({ label: 'Dining Out' });
+    
+    await page.getByRole('button', { name: 'Yearly' }).click();
+    await page.getByLabel('Limit Amount ($)').fill('1200');
+    
+    await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
+
+    // Verify initial state
+    await expect(page.getByText('Yearly limit')).toBeVisible();
+    await expect(page.getByText(/\$0\.00 spent/)).toBeVisible();
+
+    // Add a transaction
+    await page.goto('/transactions');
+    await page.getByRole('button', { name: 'New Transaction' }).click();
+    
+    const fromSelect = page.locator('select').first();
+    const toSelect = page.locator('select').nth(1);
+    await expect(fromSelect).not.toContainText('Loading accounts...');
+    
+    const today = format(new Date(), 'yyyy-MM-dd');
+    await page.fill('input[type="date"]', today);
+    await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Big Party');
+    await fromSelect.selectOption({ label: 'Checking' });
+    await toSelect.selectOption({ label: 'Dining Out' });
+    await page.getByPlaceholder('0.00').fill('120');
+    await page.getByRole('button', { name: 'Save Transaction' }).click();
+
+    // Check if modal closed
+    await expect(page.getByRole('heading', { name: 'New Transaction' })).not.toBeVisible();
+
+    // Go back to budgets and check progress
+    await page.goto('/budgets');
+    await expect(page.getByText(/\$120\.00 spent/)).toBeVisible();
+    await expect(page.getByText(/of \$1,200\.00/)).toBeVisible();
+    await expect(page.getByText(/90% remaining/)).toBeVisible();
+  });
+
+  test('should allow setting a budget from the categories page', async ({ page }) => {
+    await setupAccounts(page);
+
+    await page.goto('/categories');
+    
+    // Find "Dining Out" expense category row
+    const categoryRow = page.locator('div.group', { hasText: 'Dining Out' }).first();
+    await categoryRow.hover();
+    
+    // Click "Set Budget" target icon link
+    await categoryRow.locator('a[title="Set Budget"]').click();
+    
+    // Should be on /budgets with accountId in URL
+    await expect(page).toHaveURL(/\/budgets\?accountId=/);
+    
+    // Modal should be open with Dining Out selected
+    await expect(page.getByRole('heading', { name: 'Set Category Budget' })).toBeVisible();
+    await expect(page.getByLabel('Category')).toHaveValue(/./); // Has some value (the id)
+    
+    // Finish setting the budget
+    await page.getByLabel('Limit Amount ($)').fill('300');
+    await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
+    
+    // Verify budget card exists
+    await expect(page.getByRole('heading', { name: 'Dining Out', exact: true })).toBeVisible();
+    await expect(page.getByText(/of \$300\.00/)).toBeVisible();
   });
 
   test('should edit and delete budgets', async ({ page }) => {

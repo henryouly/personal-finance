@@ -23,8 +23,8 @@ Refine the current budget implementation to support multi-period tracking (month
 - **SQL:** Use efficient `strftime` or equivalent SQL functions for date-based grouping and filtering.
 
 ## 4. Verification Criteria
-- [ ] Monthly budgets correctly sum transactions for the current month.
-- [ ] Yearly budgets correctly sum transactions for the current year.
-- [ ] Budgets respect the `startDate` and only count subsequent transactions.
-- [ ] Users can edit and delete budgets from the UI.
-- [ ] E2E tests verify that adding a transaction updates the budget progress.
+- [x] Monthly budgets correctly sum transactions for the current month.
+- [x] Yearly budgets correctly sum transactions for the current year.
+- [x] Budgets respect the `startDate` and only count subsequent transactions.
+- [x] Users can edit and delete budgets from the UI.
+- [x] E2E tests verify that adding a transaction updates the budget progress.

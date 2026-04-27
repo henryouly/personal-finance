@@ -4,6 +4,7 @@ import { formatCurrency } from '../domain/accounting';
 import { Plus, Target, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RouterOutputs } from '../utils/trpc';
+import { useSearchParams } from 'react-router-dom';
 
 type AppBudget = RouterOutputs['budgets']['list'][number];
 
@@ -11,10 +12,14 @@ interface BudgetFormData {
   accountId: string;
   limitAmount: string;
   period: 'monthly' | 'yearly';
+  startDate: string;
 }
 
 export default function Budgets() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialAccountId = searchParams.get('accountId') || '';
+  
+  const [isModalOpen, setIsModalOpen] = useState(!!initialAccountId);
   const [editingBudget, setEditingBudget] = useState<AppBudget | null>(null);
   const budgets = trpc.budgets.list.useQuery();
   const accounts = trpc.accounts.list.useQuery({ classification: 'expense' });
@@ -22,9 +27,10 @@ export default function Budgets() {
   const utils = trpc.useContext();
 
   const [formData, setFormData] = useState<BudgetFormData>({
-    accountId: '',
+    accountId: initialAccountId,
     limitAmount: '',
     period: 'monthly',
+    startDate: format(new Date(), 'yyyy-MM-01'),
   });
 
   const createBudget = trpc.budgets.create.useMutation({
@@ -57,7 +63,12 @@ export default function Budgets() {
       accountId: '',
       limitAmount: '',
       period: 'monthly',
+      startDate: format(new Date(), 'yyyy-MM-01'),
     });
+    // Clear search params when closing
+    if (searchParams.get('accountId')) {
+      setSearchParams({});
+    }
   };
 
   const handleEdit = (budget: AppBudget) => {
@@ -66,6 +77,7 @@ export default function Budgets() {
       accountId: budget.accountId,
       limitAmount: (budget.limitAmount / 100).toString(),
       period: budget.period,
+      startDate: budget.startDate,
     });
     setIsModalOpen(true);
   };
@@ -74,6 +86,15 @@ export default function Budgets() {
     if (window.confirm('Are you sure you want to delete this budget?')) {
       deleteBudget.mutate(id);
     }
+  };
+
+  const handlePeriodChange = (period: 'monthly' | 'yearly') => {
+    const now = new Date();
+    const startDate = period === 'monthly' 
+      ? format(now, 'yyyy-MM-01')
+      : format(now, 'yyyy-01-01');
+    
+    setFormData({ ...formData, period, startDate });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -87,7 +108,6 @@ export default function Budgets() {
       createBudget.mutate({
         ...formData,
         limitAmount: Math.round(parseFloat(formData.limitAmount) * 100),
-        startDate: format(new Date(), 'yyyy-MM-dd'),
       });
     }
   };
@@ -123,7 +143,12 @@ export default function Budgets() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{budget.accountName}</h3>
-                  <p className="text-sm text-gray-500 capitalize">{budget.period} limit</p>
+                  <p className="text-sm text-gray-500">
+                    <span className="capitalize">{budget.period}</span> limit 
+                    <span className="ml-1 text-xs text-gray-400">
+                      ({budget.period === 'monthly' ? format(new Date(), 'MMMM yyyy') : format(new Date(), 'yyyy')})
+                    </span>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="hidden group-hover:flex items-center gap-2 mr-2">
@@ -160,7 +185,7 @@ export default function Budgets() {
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-xs text-gray-400">
-                    Starts: {new Date(budget.startDate).toLocaleDateString()}
+                    Tracked since: {new Date(budget.startDate + 'T00:00:00').toLocaleDateString()}
                   </p>
                   <p className="text-right text-xs text-gray-400">
                     {isOver ? 'Over budget' : `${(100 - percentage).toFixed(0)}% remaining`}
@@ -215,7 +240,7 @@ export default function Budgets() {
                   <button 
                     type="button"
                     disabled={!!editingBudget}
-                    onClick={() => setFormData({...formData, period: 'monthly'})}
+                    onClick={() => handlePeriodChange('monthly')}
                     className={cn(
                       "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
                       formData.period === 'monthly' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600',
@@ -227,7 +252,7 @@ export default function Budgets() {
                   <button 
                     type="button"
                     disabled={!!editingBudget}
-                    onClick={() => setFormData({...formData, period: 'yearly'})}
+                    onClick={() => handlePeriodChange('yearly')}
                     className={cn(
                       "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
                       formData.period === 'yearly' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600',
@@ -237,6 +262,21 @@ export default function Budgets() {
                     Yearly
                   </button>
                 </div>
+              </div>
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input 
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={e => setFormData({...formData, startDate: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                  required
+                  disabled={!!editingBudget}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Transactions on or after this date will be counted.
+                </p>
               </div>
               <div className="flex gap-4 pt-4">
                 <button 

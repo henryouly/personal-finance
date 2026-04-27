@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
-import { Plus, ChevronRight, ChevronDown, Trash2, Edit2, Folder, Tag, Loader2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, Trash2, Edit2, Folder, Tag, Loader2, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface CategoryNode {
   id: string;
@@ -289,6 +290,16 @@ function CategoryRow({
             {formatCurrency(node.totalBalance)}
           </span>
           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {node.type === 'expense' && (
+              <Link 
+                to={`/budgets?accountId=${node.id}`}
+                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                title="Set Budget"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Target className="w-4 h-4" />
+              </Link>
+            )}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
