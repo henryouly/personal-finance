@@ -18,9 +18,9 @@ export default function Categories() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [editingCategory, setEditingCategory] = useState<CategoryNode | null>(null);
-  
+
   const accounts = trpc.accounts.list.useQuery();
-  
+
   const createCategory = trpc.accounts.create.useMutation({
     onSuccess: () => {
       accounts.refetch();
@@ -65,11 +65,11 @@ export default function Categories() {
       });
     } else if (typeof parentOrEdit === 'string') {
       const parent = accounts.data?.find(a => a.id === parentOrEdit);
-      setFormData({ 
-        name: '', 
-        type: (parent?.type as any) || 'expense', 
-        parentId: parentOrEdit, 
-        color: '#3b82f6' 
+      setFormData({
+        name: '',
+        type: (parent?.type as any) || 'expense',
+        parentId: parentOrEdit,
+        color: '#3b82f6'
       });
     } else {
       setFormData({ name: '', type: 'expense', parentId: null, color: '#3b82f6' });
@@ -113,7 +113,7 @@ export default function Categories() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-        <button 
+        <button
           onClick={() => openModal()}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
@@ -134,11 +134,11 @@ export default function Categories() {
             ) : (
               <div className="divide-y divide-gray-50">
                 {incomeTree.map(node => (
-                  <CategoryRow 
-                    key={node.id} 
-                    node={node} 
-                    level={0} 
-                    expanded={expanded} 
+                  <CategoryRow
+                    key={node.id}
+                    node={node}
+                    level={0}
+                    expanded={expanded}
                     onToggle={(id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }))}
                     onAddChild={(id) => openModal(id)}
                     onEdit={(node) => openModal(node, true)}
@@ -162,11 +162,11 @@ export default function Categories() {
             ) : (
               <div className="divide-y divide-gray-50">
                 {expenseTree.map(node => (
-                  <CategoryRow 
-                    key={node.id} 
-                    node={node} 
-                    level={0} 
-                    expanded={expanded} 
+                  <CategoryRow
+                    key={node.id}
+                    node={node}
+                    level={0}
+                    expanded={expanded}
                     onToggle={(id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }))}
                     onAddChild={(id) => openModal(id)}
                     onEdit={(node) => openModal(node, true)}
@@ -190,9 +190,9 @@ export default function Categories() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
-                <input 
+                <input
                   id="categoryName"
-                  type="text" 
+                  type="text"
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -203,7 +203,7 @@ export default function Categories() {
               {!formData.parentId && (
                 <div>
                   <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <select 
+                  <select
                     id="type"
                     value={formData.type}
                     onChange={e => setFormData({...formData, type: e.target.value as any})}
@@ -221,14 +221,14 @@ export default function Categories() {
                 </div>
               )}
               <div className="flex gap-4 pt-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={createCategory.isPending || updateCategory.isPending}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
@@ -245,18 +245,18 @@ export default function Categories() {
   );
 }
 
-function CategoryRow({ 
-  node, 
-  level, 
-  expanded, 
+function CategoryRow({
+  node,
+  level,
+  expanded,
   onToggle,
   onAddChild,
   onEdit,
   onDelete,
   isDeleting
-}: { 
-  node: CategoryNode, 
-  level: number, 
+}: {
+  node: CategoryNode,
+  level: number,
   expanded: Record<string, boolean>,
   onToggle: (id: string) => void,
   onAddChild: (id: string) => void,
@@ -269,7 +269,7 @@ function CategoryRow({
 
   return (
     <>
-      <div 
+      <div
         className="group flex items-center justify-between py-3 px-4 hover:bg-gray-50 transition-colors cursor-pointer"
         style={{ paddingLeft: `${(level * 20) + 16}px` }}
         onClick={() => hasChildren && onToggle(node.id)}
@@ -284,14 +284,14 @@ function CategoryRow({
           </div>
           <span className="text-sm font-medium text-gray-900">{node.name}</span>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <span className="text-xs font-semibold text-gray-500">
             {formatCurrency(node.totalBalance)}
           </span>
           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
             {node.type === 'expense' && (
-              <Link 
+              <Link
                 to={`/budgets?accountId=${node.id}`}
                 className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
                 title="Set Budget"
@@ -300,7 +300,7 @@ function CategoryRow({
                 <Target className="w-4 h-4" />
               </Link>
             )}
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onAddChild(node.id);
@@ -310,7 +310,7 @@ function CategoryRow({
             >
               <Plus className="w-4 h-4" />
             </button>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(node);
@@ -320,7 +320,7 @@ function CategoryRow({
             >
               <Edit2 className="w-4 h-4" />
             </button>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(node.id);
@@ -334,15 +334,15 @@ function CategoryRow({
           </div>
         </div>
       </div>
-      
+
       {hasChildren && isExpanded && (
         <div className="bg-gray-50/30">
           {node.children.map(child => (
-            <CategoryRow 
-              key={child.id} 
-              node={child} 
-              level={level + 1} 
-              expanded={expanded} 
+            <CategoryRow
+              key={child.id}
+              node={child}
+              level={level + 1}
+              expanded={expanded}
               onToggle={onToggle}
               onAddChild={onAddChild}
               onEdit={onEdit}

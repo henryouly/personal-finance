@@ -29,15 +29,15 @@ test.describe('Budgeting', () => {
     await setupAccounts(page);
 
     await page.goto('/budgets');
-    
+
     // Create a budget
     await page.getByRole('button', { name: 'Set Budget' }).first().click(); // Open modal
-    
+
     const categorySelect = page.getByLabel('Category');
     // Wait for options to load
     await expect(categorySelect).not.toContainText('Loading categories...');
     await categorySelect.selectOption({ label: 'Dining Out' });
-    
+
     await page.getByLabel('Limit Amount ($)').fill('200');
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click(); // Submit modal
 
@@ -48,21 +48,21 @@ test.describe('Budgeting', () => {
     // Add a transaction
     await page.goto('/transactions');
     await page.getByRole('button', { name: 'New Transaction' }).click();
-    
+
     const fromSelect = page.locator('select').first();
     const toSelect = page.locator('select').nth(1);
     await expect(fromSelect).not.toContainText('Loading accounts...');
-    
+
     const localDate = format(new Date(), 'yyyy-MM-dd');
     await page.fill('input[type="date"]', localDate);
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Dinner');
-    
+
     await fromSelect.selectOption({ label: 'Checking' });
     await toSelect.selectOption({ label: 'Dining Out' });
-    
+
     await page.getByPlaceholder('0.00').fill('50');
     await page.getByRole('button', { name: 'Save Transaction' }).click();
-    
+
     // Check if modal closed
     await expect(page.getByRole('heading', { name: 'New Transaction' })).not.toBeVisible();
 
@@ -81,22 +81,22 @@ test.describe('Budgeting', () => {
     await expect(page.getByLabel('Category')).not.toContainText('Loading categories...');
     await page.getByLabel('Category').selectOption({ label: 'Dining Out' });
     await page.getByLabel('Limit Amount ($)').fill('100');
-    
+
     // Explicitly set start date to today to ensure yesterday's transaction is ignored
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     await page.getByLabel('Start Date').fill(todayStr);
-    
+
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
     await expect(page.getByRole('heading', { name: 'Dining Out', exact: true })).toBeVisible();
 
     // 2. Add a transaction dated YESTERDAY
     await page.goto('/transactions');
     await page.getByRole('button', { name: 'New Transaction' }).click();
-    
+
     const fromSelect = page.locator('select').first();
     const toSelect = page.locator('select').nth(1);
     await expect(fromSelect).not.toContainText('Loading accounts...');
-    
+
     const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
     await page.fill('input[type="date"]', yesterday);
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Yesterday Dinner');
@@ -114,7 +114,7 @@ test.describe('Budgeting', () => {
     await page.goto('/transactions');
     await page.getByRole('button', { name: 'New Transaction' }).click();
     await expect(fromSelect).not.toContainText('Loading accounts...');
-    
+
     const today = format(new Date(), 'yyyy-MM-dd');
     await page.fill('input[type="date"]', today);
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Today Lunch');
@@ -134,15 +134,15 @@ test.describe('Budgeting', () => {
     await setupAccounts(page);
 
     await page.goto('/budgets');
-    
+
     // Create a yearly budget
     await page.getByRole('button', { name: 'Set Budget' }).first().click();
     await expect(page.getByLabel('Category')).not.toContainText('Loading categories...');
     await page.getByLabel('Category').selectOption({ label: 'Dining Out' });
-    
+
     await page.getByRole('button', { name: 'Yearly' }).click();
     await page.getByLabel('Limit Amount ($)').fill('1200');
-    
+
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
 
     // Verify initial state
@@ -152,11 +152,11 @@ test.describe('Budgeting', () => {
     // Add a transaction
     await page.goto('/transactions');
     await page.getByRole('button', { name: 'New Transaction' }).click();
-    
+
     const fromSelect = page.locator('select').first();
     const toSelect = page.locator('select').nth(1);
     await expect(fromSelect).not.toContainText('Loading accounts...');
-    
+
     const today = format(new Date(), 'yyyy-MM-dd');
     await page.fill('input[type="date"]', today);
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Big Party');
@@ -179,25 +179,25 @@ test.describe('Budgeting', () => {
     await setupAccounts(page);
 
     await page.goto('/categories');
-    
+
     // Find "Dining Out" expense category row
     const categoryRow = page.locator('div.group', { hasText: 'Dining Out' }).first();
     await categoryRow.hover();
-    
+
     // Click "Set Budget" target icon link
     await categoryRow.locator('a[title="Set Budget"]').click();
-    
+
     // Should be on /budgets with accountId in URL
     await expect(page).toHaveURL(/\/budgets\?accountId=/);
-    
+
     // Modal should be open with Dining Out selected
     await expect(page.getByRole('heading', { name: 'Set Category Budget' })).toBeVisible();
     await expect(page.getByLabel('Category')).toHaveValue(/./); // Has some value (the id)
-    
+
     // Finish setting the budget
     await page.getByLabel('Limit Amount ($)').fill('300');
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
-    
+
     // Verify budget card exists
     await expect(page.getByRole('heading', { name: 'Dining Out', exact: true })).toBeVisible();
     await expect(page.getByText(/of \$300\.00/)).toBeVisible();
@@ -207,7 +207,7 @@ test.describe('Budgeting', () => {
     await setupAccounts(page);
 
     await page.goto('/budgets');
-    
+
     // Create budget
     await page.getByRole('button', { name: 'Set Budget' }).first().click();
     await page.getByLabel('Category').selectOption({ label: 'Dining Out' });
@@ -215,7 +215,7 @@ test.describe('Budgeting', () => {
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
 
     const budgetCard = page.locator('div.group', { has: page.getByRole('heading', { name: 'Dining Out', exact: true }) }).first();
-    
+
     // Edit
     await budgetCard.hover();
     await budgetCard.locator('.lucide-pencil').locator('xpath=..').click();

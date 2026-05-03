@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { trpc } from './utils/trpc';
-import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
   NavLink,
 } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Wallet, 
-  ArrowLeftRight, 
-  PieChart, 
+import {
+  LayoutDashboard,
+  Wallet,
+  ArrowLeftRight,
+  PieChart,
   Settings,
   Menu,
   X,
@@ -85,8 +85,8 @@ function Layout({ children }: { children: React.ReactNode }) {
               to={item.path}
               className={({ isActive }) => cn(
                 "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-                isActive 
-                  ? "bg-blue-50 text-blue-700" 
+                isActive
+                  ? "bg-blue-50 text-blue-700"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
@@ -100,7 +100,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       {/* Header - Mobile */}
       <header className="md:hidden bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-blue-600">Finance Prototype</h1>
-        <button 
+        <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
         >
@@ -118,8 +118,8 @@ function Layout({ children }: { children: React.ReactNode }) {
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) => cn(
                 "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-                isActive 
-                  ? "bg-blue-50 text-blue-700" 
+                isActive
+                  ? "bg-blue-50 text-blue-700"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >

@@ -73,10 +73,10 @@ test.describe('Split Transactions', () => {
     await page.goto('/accounts');
     // Ensure the page has reloaded and data is fresh
     await expect(page.getByText('Loading...')).not.toBeVisible();
-    
+
     // Verify balances with auto-retry
     await expect(page.locator('div', { hasText: source }).last().locator('p.text-2xl')).toContainText('-$100.00');
-    await expect(page.locator('div', { hasText: category1 }).last().locator('p.text-2xl')).toContainText('$80.00'); 
+    await expect(page.locator('div', { hasText: category1 }).last().locator('p.text-2xl')).toContainText('$80.00');
     await expect(page.locator('div', { hasText: category2 }).last().locator('p.text-2xl')).toContainText('$20.00');
   });
 });

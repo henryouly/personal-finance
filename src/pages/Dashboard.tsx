@@ -1,11 +1,11 @@
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
 import { format, startOfMonth } from 'date-fns';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Wallet, 
-  ArrowUpRight, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  ArrowUpRight,
   Plus,
   Target,
   ChevronRight,
@@ -36,29 +36,29 @@ export default function Dashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card 
-          title="Total Balance" 
+        <Card
+          title="Total Balance"
           amount={formatCurrency(accounts.data?.reduce((acc, a) => acc + a.totalBalance, 0) || 0)}
           icon={Wallet}
           color="blue"
           data-testid="summary-balance"
         />
-        <Card 
-          title="Monthly Income" 
-          amount={formatCurrency(income)} 
+        <Card
+          title="Monthly Income"
+          amount={formatCurrency(income)}
           icon={TrendingUp}
           color="green"
           data-testid="summary-income"
         />
-        <Card 
-          title="Monthly Expenses" 
-          amount={formatCurrency(expense)} 
+        <Card
+          title="Monthly Expenses"
+          amount={formatCurrency(expense)}
           icon={TrendingDown}
           color="red"
           data-testid="summary-expense"
         />
-        <Card 
-          title="Savings Rate" 
+        <Card
+          title="Savings Rate"
           amount={`${savingsRate.toFixed(1)}%`}
           icon={PieChartIcon}
           color={savingsRate >= 0 ? 'green' : 'red'}
@@ -129,10 +129,10 @@ export default function Dashboard() {
                     <span className="text-sm font-medium text-gray-700">{budget.accountName}</span>
                     <span className="text-xs text-gray-400 capitalize">{budget.period}</span>
                   </div>
-                  <BudgetProgress 
-                    currentSpent={budget.currentSpent} 
-                    limitAmount={budget.limitAmount} 
-                    compact 
+                  <BudgetProgress
+                    currentSpent={budget.currentSpent}
+                    limitAmount={budget.limitAmount}
+                    compact
                   />
                 </Link>
               ))
@@ -159,10 +159,10 @@ export default function Dashboard() {
   );
 }
 
-function Card({ title, amount, icon: Icon, color, subtext, "data-testid": testId }: { 
-  title: string, 
-  amount: string, 
-  icon: any, 
+function Card({ title, amount, icon: Icon, color, subtext, "data-testid": testId }: {
+  title: string,
+  amount: string,
+  icon: any,
   color: 'blue' | 'green' | 'red',
   subtext?: string,
   "data-testid"?: string

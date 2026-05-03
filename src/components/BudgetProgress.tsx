@@ -19,7 +19,7 @@ export function BudgetProgress({ currentSpent, limitAmount, compact = false }: B
           <span className="text-gray-400">of {formatCurrency(limitAmount)}</span>
         </div>
         <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div 
+          <div
             className={cn(
               "h-full transition-all duration-500",
               isOver ? 'bg-red-500' : percentage > 80 ? 'bg-yellow-500' : 'bg-green-500'
@@ -38,7 +38,7 @@ export function BudgetProgress({ currentSpent, limitAmount, compact = false }: B
         <span className="text-gray-500">of {formatCurrency(limitAmount)}</span>
       </div>
       <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-        <div 
+        <div
           className={cn(
             "h-full transition-all duration-500",
             isOver ? 'bg-red-500' : percentage > 80 ? 'bg-yellow-500' : 'bg-green-500'

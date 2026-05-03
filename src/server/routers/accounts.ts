@@ -6,7 +6,7 @@ import { eq, sql, and, lte } from 'drizzle-orm';
 
 export const accountsRouter = router({
   list: publicProcedure
-    .input(z.object({ 
+    .input(z.object({
       classification: z.enum(['asset', 'liability', 'equity', 'income', 'expense']).optional(),
       includeInactive: z.boolean().optional().default(false),
     }).optional())
@@ -39,7 +39,7 @@ export const accountsRouter = router({
       if (filters.length > 0) {
         return await query.where(and(...filters));
       }
-      
+
       return await query;
     }),
 
@@ -60,7 +60,7 @@ export const accountsRouter = router({
     .leftJoin(transactions, eq(journalEntries.transactionId, transactions.id))
     .where(eq(accounts.id, input))
     .groupBy(accounts.id);
-    
+
     return result;
   }),
 

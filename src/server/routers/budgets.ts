@@ -22,11 +22,11 @@ export const budgetsRouter = router({
       })
       .from(budgets)
       .innerJoin(accounts, eq(budgets.accountId, accounts.id));
-    
-    // We still need to respect the budget-specific startDate and period, 
+
+    // We still need to respect the budget-specific startDate and period,
     // so we'll do the final aggregation per budget.
     const budgetsWithProgress = await Promise.all(results.map(async (b) => {
-      const dateFilter = b.period === 'monthly' 
+      const dateFilter = b.period === 'monthly'
         ? sql`strftime('%Y-%m', ${transactions.date}) = ${currentMonth}`
         : sql`strftime('%Y', ${transactions.date}) = ${currentYear}`;
 
@@ -43,13 +43,13 @@ export const budgetsRouter = router({
             sql`${transactions.date} >= ${b.startDate}`
           )
         );
-      
+
       return {
         ...b,
         currentSpent: Math.abs(spending?.total || 0),
       };
     }));
-    
+
     return budgetsWithProgress;
   }),
 
@@ -72,7 +72,7 @@ export const budgetsRouter = router({
           )
         )
         .limit(1);
-      
+
       if (existing.length > 0) {
         throw new Error('A budget already exists for this category and period');
       }

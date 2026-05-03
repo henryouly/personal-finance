@@ -20,7 +20,7 @@ test.describe('Hierarchical Categories', () => {
     const foodRow = page.locator('div.group', { has: page.getByText('Food', { exact: true }) }).first();
     await foodRow.hover();
     await foodRow.getByTitle('Add Sub-category').click();
-    
+
     await expect(page.getByText('Parent: Food')).toBeVisible();
     await page.getByPlaceholder('e.g. Groceries').fill('Groceries');
     await page.getByRole('button', { name: 'Create' }).click();
@@ -48,7 +48,7 @@ test.describe('Hierarchical Categories', () => {
     await page.getByRole('button', { name: 'Create' }).click();
 
     const row = page.locator('div.group', { has: page.getByText('Utilities', { exact: true }) }).first();
-    
+
     // Edit
     await row.hover();
     await row.getByTitle('Edit').click();

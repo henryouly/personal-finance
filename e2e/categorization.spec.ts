@@ -47,16 +47,16 @@ test.describe('Automated Categorization', () => {
     // 2. Start a new transaction and type Starbucks
     await page.getByRole('button', { name: 'New Transaction' }).click();
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Starbucks');
-    
+
     // Blur to trigger prediction
     await page.getByPlaceholder('e.g. Starbucks Coffee').blur();
 
     // 3. Verify category auto-fills (wait for it)
     const categorySelect = page.locator('select').nth(1);
-    await expect(categorySelect).not.toHaveValue(''); 
+    await expect(categorySelect).not.toHaveValue('');
     const selectedText = await categorySelect.evaluate((sel: HTMLSelectElement) => sel.options[sel.selectedIndex].text);
     expect(selectedText).toContain('Dining Out');
-    
+
     // Verify visual feedback
     await expect(page.getByText('Suggested')).toBeVisible();
   });
@@ -66,7 +66,7 @@ test.describe('Automated Categorization', () => {
 
     await page.goto('/transactions');
     await page.getByRole('button', { name: 'New Transaction' }).click();
-    
+
     // Type Netflix (known keyword for Software/Services)
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Netflix Subscription');
     await page.getByPlaceholder('e.g. Starbucks Coffee').blur();
@@ -108,10 +108,10 @@ test.describe('Automated Categorization', () => {
 
     await page.goto('/transactions');
     await page.getByRole('button', { name: 'New Transaction' }).click();
-    
+
     // 1. Manually select Dining Out
     await page.locator('select').nth(1).selectOption({ label: 'Dining Out' });
-    
+
     // 2. Type Netflix (which would normally suggest Software)
     await page.getByPlaceholder('e.g. Starbucks Coffee').fill('Netflix');
     await page.getByPlaceholder('e.g. Starbucks Coffee').blur();

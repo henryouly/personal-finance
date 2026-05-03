@@ -5,6 +5,7 @@ import { Plus, Search, Filter, Download, Trash2, Loader2, CheckCircle, Circle, A
 import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import { cn } from '../utils/ui';
+import { CSVImportModal } from '../components/CSVImportModal';
 
 interface JournalEntry {
   id: string;
@@ -28,17 +29,18 @@ export default function Transactions() {
   const accountId = searchParams.get('accountId');
   const utils = trpc.useUtils();
   const lastPredictedDescription = useRef('');
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isSplitMode, setIsSplitMode] = useState(false);
   const [search, setSearch] = useState('');
-  
+
   const transactions = trpc.transactions.list.useQuery({ accountId: accountId ?? undefined });
   const accounts = trpc.accounts.list.useQuery();
   const selectedAccount = accounts.data?.find(a => a.id === accountId);
-  
+
   const createTransaction = trpc.transactions.create.useMutation({
     onSuccess: () => {
       transactions.refetch();
@@ -103,7 +105,7 @@ export default function Transactions() {
         const newEntries = [...formData.entries];
         newEntries[1].accountId = predictedAccountId;
         setFormData({ ...formData, entries: newEntries });
-        
+
         // Visual feedback
         setSuggestedField(1);
         setTimeout(() => setSuggestedField(null), 2000);
@@ -125,7 +127,7 @@ export default function Transactions() {
       setEditingTransaction(tx);
       const isSplit = tx.entries.length > 2;
       setIsSplitMode(isSplit);
-      
+
       setFormData({
         date: tx.date,
         description: tx.description,
@@ -151,7 +153,7 @@ export default function Transactions() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     let entries;
     if (!isSplitMode) {
       const amount = Math.round(parseFloat(formData.entries[1].amount || formData.entries[0].amount) * 100);
@@ -206,11 +208,11 @@ export default function Transactions() {
     });
   };
 
-  const variance = accountId 
+  const variance = accountId
     ? (selectedAccount?.clearedBalance ?? 0) - (Math.round(parseFloat(reconcileData.statementBalance || '0') * 100))
     : 0;
 
-  const filteredTransactions = transactions.data?.filter(tx => 
+  const filteredTransactions = transactions.data?.filter(tx =>
     tx.description.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -248,7 +250,7 @@ export default function Transactions() {
         </div>
         <div className="flex items-center gap-3">
           {accountId && (
-            <button 
+            <button
               onClick={() => setIsReconcileModalOpen(true)}
               className="flex items-center px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
             >
@@ -256,11 +258,14 @@ export default function Transactions() {
               Reconcile
             </button>
           )}
-          <button className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
             <Download className="w-4 h-4 mr-2" />
             Import CSV
           </button>
-          <button 
+          <button
             onClick={() => openModal()}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -274,8 +279,8 @@ export default function Transactions() {
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search transactions..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -308,21 +313,21 @@ export default function Transactions() {
               <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">No transactions found.</td></tr>
             ) : filteredTransactions?.map(tx => {
               const positiveEntries = tx.entries.filter(e => e.amount > 0);
-              const displayAmount = positiveEntries.length > 0 
+              const displayAmount = positiveEntries.length > 0
                 ? positiveEntries.reduce((acc, curr) => acc + curr.amount, 0)
                 : tx.entries[0].amount;
-                
+
               const isDeleting = deleteTransaction.isPending && deleteTransaction.variables === tx.id;
               const isUpdatingStatus = updateStatus.isPending && updateStatus.variables?.id === tx.id;
-              
+
               return (
-                <tr 
-                  key={tx.id} 
+                <tr
+                  key={tx.id}
                   onClick={() => openModal(tx)}
                   className="hover:bg-gray-50 transition-colors cursor-pointer group"
                 >
                   <td className="px-3 py-4">
-                    <button 
+                    <button
                       onClick={(e) => handleStatusToggle(e, tx)}
                       disabled={isUpdatingStatus}
                       className={cn(
@@ -356,7 +361,7 @@ export default function Transactions() {
                     {formatCurrency(Math.abs(displayAmount))}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
+                    <button
                       onClick={(e) => handleDelete(e, tx.id)}
                       disabled={isDeleting}
                       className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
@@ -379,7 +384,7 @@ export default function Transactions() {
               <h2 className="text-xl font-bold">
                 {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
               </h2>
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsSplitMode(!isSplitMode)}
                 className="text-sm font-semibold text-blue-600 hover:text-blue-700"
@@ -387,13 +392,13 @@ export default function Transactions() {
                 {isSplitMode ? 'Simple Mode' : 'Split Transaction'}
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={formData.date}
                     onChange={e => setFormData({...formData, date: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -402,8 +407,8 @@ export default function Transactions() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
                     onBlur={handleDescriptionBlur}
@@ -419,7 +424,7 @@ export default function Transactions() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">From Account</label>
-                      <select 
+                      <select
                         value={formData.entries[0].accountId}
                         onChange={e => {
                           const newEntries = [...formData.entries];
@@ -437,10 +442,10 @@ export default function Transactions() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        To Account / Category 
+                        To Account / Category
                         {suggestedField === 1 && <span className="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full animate-pulse">Suggested</span>}
                       </label>
-                      <select 
+                      <select
                         value={formData.entries[1].accountId}
                         onChange={e => {
                           const newEntries = [...formData.entries];
@@ -462,8 +467,8 @@ export default function Transactions() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="0.01"
                       value={formData.entries[1].amount || formData.entries[0].amount}
                       onChange={e => {
@@ -482,7 +487,7 @@ export default function Transactions() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Entries</h3>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setFormData({
                         ...formData,
@@ -500,7 +505,7 @@ export default function Transactions() {
                           <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
                             {index === 0 ? 'Source Account' : `Split ${index}`}
                           </label>
-                          <select 
+                          <select
                             value={entry.accountId}
                             onChange={e => {
                               const newEntries = [...formData.entries];
@@ -518,8 +523,8 @@ export default function Transactions() {
                         </div>
                         <div className="w-32">
                           <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             step="0.01"
                             value={entry.amount}
                             onChange={e => {
@@ -533,7 +538,7 @@ export default function Transactions() {
                           />
                         </div>
                         {formData.entries.length > 2 && (
-                          <button 
+                          <button
                             type="button"
                             onClick={() => {
                               const newEntries = formData.entries.filter((_, i) => i !== index);
@@ -560,14 +565,14 @@ export default function Transactions() {
               )}
 
               <div className="flex gap-4 pt-4 border-t border-gray-100">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={createTransaction.isPending || updateTransaction.isPending || (isSplitMode && totalOutOfBalance !== 0)}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center font-semibold"
@@ -589,12 +594,12 @@ export default function Transactions() {
           <div className="bg-white rounded-2xl p-8 w-full max-w-md">
             <h2 className="text-xl font-bold mb-2">Reconcile {selectedAccount?.name}</h2>
             <p className="text-sm text-gray-500 mb-6">Compare your cleared balance against your bank statement.</p>
-            
+
             <form onSubmit={handleReconcileSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Statement Date</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   value={reconcileData.statementDate}
                   onChange={e => setReconcileData({...reconcileData, statementDate: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -603,8 +608,8 @@ export default function Transactions() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Statement Ending Balance ($)</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   step="0.01"
                   value={reconcileData.statementBalance}
                   onChange={e => setReconcileData({...reconcileData, statementBalance: e.target.value})}
@@ -638,14 +643,14 @@ export default function Transactions() {
               )}
 
               <div className="flex gap-4 pt-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsReconcileModalOpen(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={variance !== 0 || reconcile.isPending}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
@@ -658,6 +663,16 @@ export default function Transactions() {
           </div>
         </div>
       )}
+
+      <CSVImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          transactions.refetch();
+          accounts.refetch();
+        }}
+        targetAccountId={accountId ?? undefined}
+      />
     </div>
   );
 }

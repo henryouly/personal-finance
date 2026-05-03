@@ -31,7 +31,7 @@ test.describe('Account Balance & Reconciliation', () => {
     await expect(targetCard.locator('p.text-2xl')).toContainText('$0.00');
 
     // 3. Add transactions
-    await targetCard.click(); 
+    await targetCard.click();
     await expect(page).toHaveURL(/\/transactions\?accountId=.+/);
 
     // Add first transaction ($50.00)
@@ -65,12 +65,12 @@ test.describe('Account Balance & Reconciliation', () => {
     const statementBalanceInput = page.getByPlaceholder('0.00').last();
     await statementBalanceInput.fill('100');
     const varianceDisplay = page.locator('span', { hasText: 'Variance' }).locator('xpath=following-sibling::span');
-    await expect(varianceDisplay).toContainText(/50\.00/); 
+    await expect(varianceDisplay).toContainText(/50\.00/);
     await expect(page.getByRole('button', { name: 'Finalize' })).toBeDisabled();
     await page.getByRole('button', { name: 'Cancel' }).click();
 
     const row25 = page.locator('tr', { hasText: 'Income 25' });
-    await row25.locator('button').first().click(); 
+    await row25.locator('button').first().click();
     await expect(page.locator('p', { hasText: 'Cleared:' }).locator('span')).toContainText('$75.00');
 
     await page.getByRole('button', { name: 'Reconcile' }).click();

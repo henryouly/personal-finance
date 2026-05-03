@@ -31,7 +31,7 @@ export const analyticsRouter = router({
           )
         )
         .groupBy(accounts.id);
-      
+
       return results;
     }),
 
@@ -57,10 +57,10 @@ export const analyticsRouter = router({
           )
         )
         .groupBy(accounts.type);
-      
+
       const income = results.find(r => r.type === 'income')?.total || 0;
       const expense = results.find(r => r.type === 'expense')?.total || 0;
-      
+
       return {
         income: Math.abs(income),
         expense: Math.abs(expense),
@@ -73,7 +73,7 @@ export const analyticsRouter = router({
     }))
     .query(async ({ input }) => {
       const startDate = format(subMonths(startOfMonth(new Date()), input.months - 1), 'yyyy-MM-dd');
-      
+
       const rawResults = await db
         .select({
           month: sql<string>`strftime('%Y-%m', ${transactions.date})`,
@@ -97,7 +97,7 @@ export const analyticsRouter = router({
 
       // Transform into a pivoted format: { month, income, expense, net }
       const monthsMap: Record<string, { month: string, income: number, expense: number, net: number }> = {};
-      
+
       // Initialize months for the requested range to ensure no gaps
       for (let i = 0; i < input.months; i++) {
         const date = subMonths(new Date(), i);
@@ -109,7 +109,7 @@ export const analyticsRouter = router({
         if (!monthsMap[row.month]) {
           monthsMap[row.month] = { month: row.month, income: 0, expense: 0, net: 0 };
         }
-        
+
         if (row.type === 'income') {
           monthsMap[row.month].income = Math.abs(row.total);
         } else if (row.type === 'expense') {
@@ -144,7 +144,7 @@ export const analyticsRouter = router({
         )
         .groupBy(sql`strftime('%Y-%m', ${transactions.date})`)
         .orderBy(sql`strftime('%Y-%m', ${transactions.date})`);
-      
+
       const monthsMap: Record<string, { month: string, total: number }> = {};
       for (let i = 0; i < input.months; i++) {
         const date = subMonths(new Date(), i);
@@ -217,7 +217,7 @@ export const analyticsRouter = router({
         // We need to iterate from oldest to newest to calculate cumulative
         const date = subMonths(new Date(), (input.months - 1) - i);
         const monthKey = format(date, 'yyyy-MM');
-        
+
         const change = changesMap[monthKey] || { assets: 0, liabilities: 0 };
         runningAssets += change.assets;
         runningLiabilities += change.liabilities;
@@ -259,7 +259,7 @@ export const analyticsRouter = router({
         .groupBy(transactions.description)
         .orderBy(desc(sql`SUM(${journalEntries.amount})`))
         .limit(input.limit);
-      
+
       return results.map(r => ({
         ...r,
         total: Math.abs(r.total)

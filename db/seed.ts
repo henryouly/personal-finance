@@ -3,7 +3,7 @@ import { accounts } from './schema';
 
 async function seed() {
   console.log('Seeding initial categories...');
-  
+
   const initialAccounts = [
     { id: crypto.randomUUID(), name: 'Chase Checking', type: 'asset' as const, color: '#3b82f6' },
     { id: crypto.randomUUID(), name: 'AMEX Gold', type: 'liability' as const, color: '#f59e0b' },
@@ -17,7 +17,7 @@ async function seed() {
   for (const account of initialAccounts) {
     await db.insert(accounts).values(account);
   }
-  
+
   console.log('Seed complete.');
 }
 

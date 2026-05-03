@@ -7,7 +7,7 @@ describe('tRPC Router Integration', () => {
   it('should return an empty list of accounts initially', async () => {
     // Clear the db first for consistent results
     await db.delete(accounts);
-    
+
     const res = await app.request('/trpc/accounts.list');
     expect(res.status).toBe(200);
     const json = await res.json();

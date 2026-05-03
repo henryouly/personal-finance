@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { formatCurrency } from '../domain/accounting';
 import { format, startOfMonth, subMonths } from 'date-fns';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -24,7 +24,7 @@ import { Calendar, Tag, TrendingUp, Percent, Store } from 'lucide-react';
 
 export default function Reports() {
   const [months, setMonths] = useState(6);
-  
+
   const dateRange = {
     startDate: format(subMonths(startOfMonth(new Date()), months - 1), 'yyyy-MM-dd'),
     endDate: format(new Date(), 'yyyy-MM-dd'),
@@ -61,8 +61,8 @@ export default function Reports() {
               key={m}
               onClick={() => setMonths(m)}
               className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                months === m 
-                  ? 'bg-blue-600 text-white shadow-sm' 
+                months === m
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -78,10 +78,10 @@ export default function Reports() {
         <SummaryCard title="Avg. Income" value={formatCurrency(avgIncome)} color="green" data-testid="summary-income" />
         <SummaryCard title="Avg. Expense" value={formatCurrency(avgExpense)} color="red" data-testid="summary-expense" />
         <SummaryCard title="Avg. Savings" value={formatCurrency(avgNet)} color="blue" data-testid="summary-savings" />
-        <SummaryCard 
-          title="Savings Rate" 
-          value={`${savingsRate.toFixed(1)}%`} 
-          color={savingsRate >= 0 ? 'green' : 'red'} 
+        <SummaryCard
+          title="Savings Rate"
+          value={`${savingsRate.toFixed(1)}%`}
+          color={savingsRate >= 0 ? 'green' : 'red'}
           data-testid="summary-savings-rate"
         />
       </div>
@@ -105,21 +105,21 @@ export default function Reports() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')} 
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')}
                 />
                 <YAxis tickFormatter={(value) => `$${value/100}`} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => formatCurrency(Number(value))}
                   labelFormatter={(label) => format(new Date(label + '-02'), 'MMMM yyyy')}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="netWorth" 
-                  stroke="#3b82f6" 
-                  fillOpacity={1} 
-                  fill="url(#colorNetWorth)" 
+                <Area
+                  type="monotone"
+                  dataKey="netWorth"
+                  stroke="#3b82f6"
+                  fillOpacity={1}
+                  fill="url(#colorNetWorth)"
                   strokeWidth={3}
                 />
               </AreaChart>
@@ -140,28 +140,28 @@ export default function Reports() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyIncomeVsExpense.data}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')} 
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')}
                 />
                 <YAxis tickFormatter={(value) => `$${value/100}`} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => formatCurrency(Number(value))}
                   labelFormatter={(label) => format(new Date(label + '-02'), 'MMMM yyyy')}
                 />
                 <Legend verticalAlign="top" align="right" height={36}/>
-                <Bar 
-                  name="Income" 
-                  dataKey="income" 
-                  fill="#10b981" 
-                  radius={[4, 4, 0, 0]} 
+                <Bar
+                  name="Income"
+                  dataKey="income"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
                   barSize={32}
                 />
-                <Bar 
-                  name="Expenses" 
-                  dataKey="expense" 
-                  fill="#ef4444" 
-                  radius={[4, 4, 0, 0]} 
+                <Bar
+                  name="Expenses"
+                  dataKey="expense"
+                  fill="#ef4444"
+                  radius={[4, 4, 0, 0]}
                   barSize={32}
                 />
               </BarChart>
@@ -181,18 +181,18 @@ export default function Reports() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={savingsRateHistory}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')} 
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')}
                 />
                 <YAxis tickFormatter={(value) => `${value}%`} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => [`${Number(value).toFixed(1)}%`, 'Savings Rate']}
                   labelFormatter={(label) => format(new Date(label + '-02'), 'MMMM yyyy')}
                 />
                 <ReferenceLine y={0} stroke="#000" />
-                <Bar 
-                  dataKey="rate" 
+                <Bar
+                  dataKey="rate"
                   radius={[4, 4, 0, 0]}
                   barSize={40}
                 >
@@ -229,7 +229,7 @@ export default function Reports() {
                     <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => {
                     const amount = Math.abs(Number(value));
                     const percent = totalCategorySpending > 0 ? (amount / totalCategorySpending * 100).toFixed(1) : 0;
@@ -244,7 +244,7 @@ export default function Reports() {
               <span className="text-xl font-bold text-gray-900">{formatCurrency(totalCategorySpending)}</span>
             </div>
           </div>
-          
+
           {/* Legend Table */}
           <div className="mt-6 space-y-2 max-h-48 overflow-y-auto">
             {(categorySpending.data || [])
@@ -273,20 +273,20 @@ export default function Reports() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlySpending.data || []}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')} 
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={(val) => format(new Date(val + '-02'), 'MMM yy')}
                 />
                 <YAxis tickFormatter={(value) => `$${Math.abs(value)/100}`} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => formatCurrency(Math.abs(Number(value)))}
                   labelFormatter={(label) => format(new Date(label + '-02'), 'MMMM yyyy')}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="total" 
-                  stroke="#3b82f6" 
-                  strokeWidth={3} 
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
                   dot={{ r: 6, fill: '#3b82f6' }}
                   activeDot={{ r: 8 }}
                 />
@@ -308,7 +308,7 @@ export default function Reports() {
               topMerchants.data?.map((merchant, index) => {
                 const maxSpending = topMerchants.data?.[0]?.total || 0;
                 const percentage = maxSpending > 0 ? (merchant.total / maxSpending) * 100 : 0;
-                
+
                 return (
                   <div key={merchant.name + index} className="space-y-2">
                     <div className="flex justify-between items-end">
@@ -319,8 +319,8 @@ export default function Reports() {
                       <p className="text-sm font-bold text-gray-900">{formatCurrency(merchant.total)}</p>
                     </div>
                     <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-purple-500 rounded-full" 
+                      <div
+                        className="h-full bg-purple-500 rounded-full"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -335,9 +335,9 @@ export default function Reports() {
   );
 }
 
-function SummaryCard({ title, value, color, "data-testid": testId }: { 
-  title: string, 
-  value: string, 
+function SummaryCard({ title, value, color, "data-testid": testId }: {
+  title: string,
+  value: string,
   color: 'green' | 'red' | 'blue',
   "data-testid"?: string
 }) {

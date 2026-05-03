@@ -29,7 +29,7 @@ export default function Accounts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Accounts</h1>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
@@ -84,9 +84,9 @@ export default function Accounts() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accountName" className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
-                <input 
+                <input
                   id="accountName"
-                  type="text" 
+                  type="text"
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -96,7 +96,7 @@ export default function Accounts() {
               </div>
               <div>
                 <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select 
+                <select
                   id="type"
                   value={formData.type}
                   onChange={e => setFormData({...formData, type: e.target.value as any})}
@@ -111,22 +111,22 @@ export default function Accounts() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Theme Color</label>
-                <input 
-                  type="color" 
+                <input
+                  type="color"
                   value={formData.color}
                   onChange={e => setFormData({...formData, color: e.target.value})}
                   className="w-full h-10 p-1 border border-gray-300 rounded-lg cursor-pointer"
                 />
               </div>
               <div className="flex gap-4 pt-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >

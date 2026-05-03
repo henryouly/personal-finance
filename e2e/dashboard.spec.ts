@@ -27,10 +27,10 @@ test.describe('Dashboard', () => {
     // 3. Set Budget
     await page.goto('/budgets');
     await page.getByRole('button', { name: 'Set Budget' }).click();
-    
+
     // Use selectOption directly on the locator, it will wait for the option to be attached
     await page.locator('select#category').selectOption({ label: 'Groceries' });
-    
+
     await page.getByLabel('Limit Amount ($)').fill('100');
     await page.locator('form').getByRole('button', { name: 'Set Budget' }).click();
     await expect(page.getByRole('heading', { name: 'Groceries' })).toBeVisible();
@@ -57,7 +57,7 @@ test.describe('Dashboard', () => {
     await expect(budgetSection.getByText('Groceries')).toBeVisible();
     await expect(budgetSection.getByText(/\$50\.00/)).toBeVisible();
     await expect(budgetSection.getByText(/of \$100\.00/)).toBeVisible();
-    
+
     // Check color class (green for 50%)
     const progressBar = budgetSection.locator('.bg-green-500');
     await expect(progressBar).toBeVisible();
@@ -86,14 +86,14 @@ test.describe('Dashboard', () => {
 
   test('should display summary cards including savings rate', async ({ page }) => {
     await page.goto('/');
-    
+
     await expect(page.getByTestId('summary-balance')).toBeVisible();
     await expect(page.getByTestId('summary-income')).toBeVisible();
     await expect(page.getByTestId('summary-expense')).toBeVisible();
-    
+
     const savingsRateCard = page.getByTestId('summary-savings-rate');
     await expect(savingsRateCard).toBeVisible();
-    
+
     // Verify icon exists
     const icon = savingsRateCard.locator('svg');
     await expect(icon).toBeVisible();

@@ -19,12 +19,12 @@ interface BudgetFormData {
 export default function Budgets() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialAccountId = searchParams.get('accountId') || '';
-  
+
   const [isModalOpen, setIsModalOpen] = useState(!!initialAccountId);
   const [editingBudget, setEditingBudget] = useState<AppBudget | null>(null);
   const budgets = trpc.budgets.list.useQuery();
   const accounts = trpc.accounts.list.useQuery({ classification: 'expense' });
-  
+
   const utils = trpc.useContext();
 
   const [formData, setFormData] = useState<BudgetFormData>({
@@ -91,10 +91,10 @@ export default function Budgets() {
 
   const handlePeriodChange = (period: 'monthly' | 'yearly') => {
     const now = new Date();
-    const startDate = period === 'monthly' 
+    const startDate = period === 'monthly'
       ? format(now, 'yyyy-MM-01')
       : format(now, 'yyyy-01-01');
-    
+
     setFormData({ ...formData, period, startDate });
   };
 
@@ -117,7 +117,7 @@ export default function Budgets() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Budgets</h1>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
@@ -141,7 +141,7 @@ export default function Budgets() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{budget.accountName}</h3>
                   <p className="text-sm text-gray-500">
-                    <span className="capitalize">{budget.period}</span> limit 
+                    <span className="capitalize">{budget.period}</span> limit
                     <span className="ml-1 text-xs text-gray-400">
                       ({budget.period === 'monthly' ? format(new Date(), 'MMMM yyyy') : format(new Date(), 'yyyy')})
                     </span>
@@ -149,13 +149,13 @@ export default function Budgets() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="hidden group-hover:flex items-center gap-2 mr-2">
-                    <button 
+                    <button
                       onClick={() => handleEdit(budget)}
                       className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(budget.id)}
                       className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
                     >
@@ -165,11 +165,11 @@ export default function Budgets() {
                   {budget.currentSpent > budget.limitAmount && <AlertCircle className="w-6 h-6 text-red-500" />}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <BudgetProgress 
-                  currentSpent={budget.currentSpent} 
-                  limitAmount={budget.limitAmount} 
+                <BudgetProgress
+                  currentSpent={budget.currentSpent}
+                  limitAmount={budget.limitAmount}
                 />
                 <div className="flex justify-start">
                   <p className="text-xs text-gray-400">
@@ -191,7 +191,7 @@ export default function Budgets() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select 
+                <select
                   id="category"
                   value={formData.accountId}
                   onChange={e => setFormData({...formData, accountId: e.target.value})}
@@ -207,9 +207,9 @@ export default function Budgets() {
               </div>
               <div>
                 <label htmlFor="limitAmount" className="block text-sm font-medium text-gray-700 mb-1">Limit Amount ($)</label>
-                <input 
+                <input
                   id="limitAmount"
-                  type="number" 
+                  type="number"
                   step="0.01"
                   value={formData.limitAmount}
                   onChange={e => setFormData({...formData, limitAmount: e.target.value})}
@@ -221,7 +221,7 @@ export default function Budgets() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button 
+                  <button
                     type="button"
                     disabled={!!editingBudget}
                     onClick={() => handlePeriodChange('monthly')}
@@ -233,7 +233,7 @@ export default function Budgets() {
                   >
                     Monthly
                   </button>
-                  <button 
+                  <button
                     type="button"
                     disabled={!!editingBudget}
                     onClick={() => handlePeriodChange('yearly')}
@@ -249,7 +249,7 @@ export default function Budgets() {
               </div>
               <div>
                 <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input 
+                <input
                   id="startDate"
                   type="date"
                   value={formData.startDate}
@@ -263,14 +263,14 @@ export default function Budgets() {
                 </p>
               </div>
               <div className="flex gap-4 pt-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >

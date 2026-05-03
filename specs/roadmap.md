@@ -30,10 +30,10 @@
 - [x] Savings rate calculator widget. ✅
 - [x] Top merchants/payees report. ✅
 
-## Phase 5: Bulk Operations & Advanced Features (Planned 📅)
-- [ ] **CSV Import Engine:** Drag-and-drop bank statement processing.
-- [ ] Column mapping and preview before import.
-- [ ] Duplicate detection and fuzzy matching for manual transactions.
+## Phase 5: Bulk Operations & Advanced Features (In Progress 🚧)
+- [x] **CSV Import Engine:** Drag-and-drop bank statement processing. ✅
+- [x] Column mapping and preview before import. ✅
+- [x] Duplicate detection and fuzzy matching for manual transactions. ✅
 - [ ] Data export (JSON/CSV).
 - [ ] Dark mode support and mobile-responsive polish.
 
